@@ -21,46 +21,41 @@
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-            <button onclick="kontrolPintu(0)" class="flex flex-col items-center justify-center gap-3 p-6 bg-slate-800 border-2 border-green-500/30 rounded-2xl hover:border-green-500 text-green-400 active:scale-95 transition-all">
+            <button onclick="kontrolPintu(1)" class="flex flex-col items-center justify-center gap-3 p-6 bg-slate-800 border-2 border-green-500/30 rounded-2xl hover:border-green-500 text-green-400 active:scale-95 transition-all">
                 <i data-lucide="unlock" class="w-8 h-8"></i>
-                <span class="font-bold text-xs">BUKA</span>
+                <span class="font-bold text-xs uppercase">Buka</span>
             </button>
 
-            <button onclick="kontrolPintu(1)" class="flex flex-col items-center justify-center gap-3 p-6 bg-slate-800 border-2 border-red-500/30 rounded-2xl hover:border-red-500 text-red-400 active:scale-95 transition-all">
+            <button onclick="kontrolPintu(0)" class="flex flex-col items-center justify-center gap-3 p-6 bg-slate-800 border-2 border-red-500/30 rounded-2xl hover:border-red-500 text-red-400 active:scale-95 transition-all">
                 <i data-lucide="lock" class="w-8 h-8"></i>
-                <span class="font-bold text-xs">KUNCI</span>
+                <span class="font-bold text-xs uppercase">Kunci</span>
             </button>
         </div>
 
-        <p class="mt-8 text-[10px] text-slate-600 uppercase font-mono tracking-tighter">Connected: ESP32-WROOM-C • Blynk Cloud</p>
+        <p class="mt-8 text-[10px] text-slate-600 uppercase font-mono tracking-tighter italic">Connected: ESP32-WROOM-C • Blynk Cloud</p>
     </div>
 
     <script>
         lucide.createIcons();
-        
-        // Data dari akun Mas Eko
         const blynkToken = "LEFHZSZHtuGUqimUSXVjg_0QKbdPDrFI";
 
-        function kontrolPintu(pilihan) {
+        function kontrolPintu(nilai) {
             const statusText = document.getElementById('status-text');
             const icon = document.getElementById('lock-icon');
             const card = document.getElementById('status-card');
 
-            statusText.innerText = "MENGIRIM...";
+            statusText.innerText = "PROSES...";
             
-            // LOGIKA SINKRON OTOMATIS:
-            // Klik BUKA (0) -> Kirim 1 ke Blynk agar Switch jadi ON
-            // Klik KUNCI (1) -> Kirim 0 ke Blynk agar Switch jadi OFF
-            const nilaiKirim = (pilihan === 0) ? 1 : 0;
-            const url = `https://blynk.cloud/external/api/update?token=${blynkToken}&v1=${nilaiKirim}`;
+            // Mengirim perintah ke Blynk Datastream V1
+            const url = `https://blynk.cloud/external/api/update?token=${blynkToken}&v1=${nilai}`;
 
             fetch(url).then(() => {
-                if (pilihan === 0) {
+                if (nilai === 1) { // Jika BUKA (Switch ON)
                     statusText.innerText = "TERBUKA";
                     statusText.className = "text-3xl font-black italic text-green-400";
                     icon.setAttribute('data-lucide', 'unlock');
                     card.className = "mb-8 p-8 rounded-3xl border bg-green-900/10 border-green-500/30 transition-all duration-500";
-                } else {
+                } else { // Jika KUNCI (Switch OFF)
                     statusText.innerText = "TERKUNCI";
                     statusText.className = "text-3xl font-black italic text-slate-100";
                     icon.setAttribute('data-lucide', 'lock');
