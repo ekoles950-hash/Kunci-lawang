@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basecamp Control Panel</title>
+    <title>Basecamp Coffee Control</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -15,25 +15,25 @@
         <div class="mb-8 p-6 bg-[#0f172a]/60 border border-slate-700 rounded-3xl text-center">
             <div class="flex items-center justify-center gap-3 mb-4 text-blue-400">
                 <i data-lucide="tv"></i>
-                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 font-mono">Timer Monitor PS</span>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Timer TV PlayStation</span>
             </div>
             
-            <div id="display" class="text-6xl font-mono font-black text-yellow-500 mb-6 drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">00:00</div>
+            <div id="display" class="text-6xl font-mono font-black text-yellow-500 mb-6">00:00</div>
 
             <div class="grid grid-cols-5 gap-2 mb-6">
-                <button onclick="setTimer(60)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 active:scale-95 transition-all border border-slate-700">1H</button>
-                <button onclick="setTimer(120)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 active:scale-95 transition-all border border-slate-700">2H</button>
-                <button onclick="setTimer(180)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 active:scale-95 transition-all border border-slate-700">3H</button>
-                <button onclick="setTimer(240)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 active:scale-95 transition-all border border-slate-700">4H</button>
-                <button onclick="setTimer(300)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 active:scale-95 transition-all border border-slate-700">5H</button>
-                <button onclick="setTimer(360)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 active:scale-95 transition-all border border-slate-700">6H</button>
-                <button onclick="setTimer(420)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 active:scale-95 transition-all border border-slate-700">7H</button>
-                <button onclick="setTimer(480)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 active:scale-95 transition-all border border-slate-700">8H</button>
-                <button onclick="setTimer(540)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 active:scale-95 transition-all border border-slate-700">9H</button>
-                <button onclick="setTimer(600)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 active:scale-95 transition-all border border-blue-500/30 text-blue-400">10H</button>
+                <button onclick="setTimer(60)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 border border-slate-700">1H</button>
+                <button onclick="setTimer(120)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 border border-slate-700">2H</button>
+                <button onclick="setTimer(180)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 border border-slate-700">3H</button>
+                <button onclick="setTimer(240)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 border border-slate-700">4H</button>
+                <button onclick="setTimer(300)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 border border-slate-700">5H</button>
+                <button onclick="setTimer(360)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 border border-slate-700">6H</button>
+                <button onclick="setTimer(420)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 border border-slate-700">7H</button>
+                <button onclick="setTimer(480)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 border border-slate-700">8H</button>
+                <button onclick="setTimer(540)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-slate-700 border border-slate-700">9H</button>
+                <button onclick="setTimer(600)" class="bg-slate-800 py-2 rounded-lg font-bold text-[9px] hover:bg-blue-900 border border-blue-500/30 text-blue-400">10H</button>
             </div>
 
-            <button id="btn-tv" onclick="mulaiTV()" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-blue-900/40">Mulai Main</button>
+            <button id="btn-tv" onclick="mulaiTV()" class="w-full bg-blue-600 py-4 rounded-2xl font-black text-sm uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-blue-900/40">Mulai Sewa</button>
         </div>
 
         <div class="p-6 bg-[#0f172a]/60 border border-slate-700 rounded-3xl">
@@ -42,7 +42,7 @@
                     <div class="p-3 bg-yellow-500/10 rounded-xl text-yellow-500"><i data-lucide="lightbulb"></i></div>
                     <div>
                         <p class="text-[10px] text-slate-500 uppercase font-bold font-mono">Penerangan</p>
-                        <h2 class="font-bold text-base italic leading-none">4 LAMPU</h2>
+                        <h2 class="font-bold text-base italic leading-none text-slate-200">4 LAMPU</h2>
                     </div>
                 </div>
                 <button onclick="toggleLampu()" id="btn-lampu" class="px-5 py-2 bg-slate-800 rounded-full font-black text-[10px] uppercase border border-slate-600 transition-all">OFF</button>
@@ -64,6 +64,7 @@
             fetch(`https://blynk.cloud/external/api/update?token=${token}&${pin}=${val}`);
         }
 
+        // Timer Monitor TV (V1)
         function setTimer(m) { if(!running) { detik = m * 60; updateDisp(); } }
         
         function updateDisp() {
@@ -82,35 +83,36 @@
         function mulaiTV() {
             if (detik <= 0 || running) return;
             running = true;
-            blynk('v2', 1);
-            document.getElementById('btn-tv').innerText = "SEDANG MAIN...";
+            blynk('v1', 1); // Panggil V1 untuk TV
+            document.getElementById('btn-tv').innerText = "SEDANG JALAN";
             document.getElementById('btn-tv').className = "w-full bg-green-600/20 border border-green-500 text-green-400 py-4 rounded-2xl font-black text-sm uppercase tracking-widest";
             
             timer = setInterval(() => {
                 if (detik > 0) { detik--; updateDisp(); }
                 else { 
                     clearInterval(timer);
-                    blynk('v2', 0);
+                    blynk('v1', 0); // Matikan V1
                     running = false;
-                    document.getElementById('btn-tv').innerText = "MULAI MAIN";
+                    document.getElementById('btn-tv').innerText = "MULAI SEWA";
                     document.getElementById('btn-tv').className = "w-full bg-blue-600 py-4 rounded-2xl font-black text-sm uppercase tracking-widest";
-                    alert("Waktu Habis! TV Mati.");
+                    alert("Waktu Rental Selesai!");
                 }
             }, 1000);
         }
 
+        // Kontrol Lampu (V2)
         function toggleLampu() {
             lampuOn = !lampuOn;
-            blynk('v3', lampuOn ? 1 : 0);
+            blynk('v2', lampuOn ? 1 : 0); // Panggil V2 untuk Lampu
             const btn = document.getElementById('btn-lampu');
             btn.innerText = lampuOn ? "ON" : "OFF";
             btn.className = lampuOn ? "px-5 py-2 bg-green-500/20 text-green-400 rounded-full font-black text-[10px] uppercase border border-green-500/50" : "px-5 py-2 bg-slate-800 rounded-full font-black text-[10px] uppercase border border-slate-600";
         }
 
         function resetSemua() {
-            if(confirm("Matikan TV dan Reset Waktu?")) {
+            if(confirm("Hentikan sewa & matikan TV sekarang?")) {
                 location.reload();
-                blynk('v2', 0);
+                blynk('v1', 0);
             }
         }
     </script>
