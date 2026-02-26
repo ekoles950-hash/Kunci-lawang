@@ -3,69 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartLock Pro - Basecamp</title>
+    <title>Control Center - Basecamp</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 flex flex-col items-center justify-center min-h-screen p-4">
+<body class="bg-slate-900 text-slate-100 flex flex-col items-center justify-center min-h-screen p-6">
 
-    <div class="w-full max-w-md bg-slate-800 rounded-3xl p-8 border border-slate-700 shadow-2xl text-center">
-        <h1 class="text-xl font-bold mb-8 uppercase tracking-widest text-blue-400">SmartLock Basecamp</h1>
+    <div class="w-full max-w-md bg-slate-800 rounded-[2rem] p-8 border border-slate-700 shadow-2xl text-center">
+        <h1 class="text-xl font-black mb-8 uppercase tracking-widest text-blue-400 italic">Basecamp Coffee</h1>
 
-        <div id="status-card" class="mb-8 p-8 rounded-3xl border bg-slate-700/30 border-slate-600 transition-all duration-500">
-            <div class="flex justify-center mb-4">
-                <i id="lock-icon" data-lucide="lock" class="w-16 h-16 text-slate-400"></i>
-            </div>
-            <p class="text-[10px] text-slate-500 uppercase mb-1">Status Pintu</p>
-            <h2 id="status-text" class="text-3xl font-black italic text-slate-100 uppercase">SIAP</h2>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-            <button onclick="kontrolPintu(1)" class="flex flex-col items-center justify-center gap-3 p-6 bg-slate-800 border-2 border-green-500/30 rounded-2xl hover:border-green-500 text-green-400 active:scale-95 transition-all">
-                <i data-lucide="unlock" class="w-8 h-8"></i>
-                <span class="font-bold text-xs uppercase">Buka</span>
+        <div class="grid grid-cols-1 gap-6">
+            <button onclick="kontrolAlat('v2', 'status-tv')" class="group relative flex items-center justify-between p-6 bg-slate-900/50 border-2 border-slate-700 rounded-3xl hover:border-blue-500 transition-all active:scale-95">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-blue-500/10 rounded-2xl text-blue-500"><i data-lucide="tv"></i></div>
+                    <div class="text-left"><p class="text-[10px] text-slate-500 uppercase">Power Rental</p><h2 class="font-bold text-lg">TV & PS</h2></div>
+                </div>
+                <span id="status-tv" class="text-[10px] font-bold px-3 py-1 rounded-full bg-slate-800 text-slate-500">OFF</span>
             </button>
 
-            <button onclick="kontrolPintu(0)" class="flex flex-col items-center justify-center gap-3 p-6 bg-slate-800 border-2 border-red-500/30 rounded-2xl hover:border-red-500 text-red-400 active:scale-95 transition-all">
-                <i data-lucide="lock" class="w-8 h-8"></i>
-                <span class="font-bold text-xs uppercase">Kunci</span>
+            <button onclick="kontrolAlat('v3', 'status-lampu')" class="group relative flex items-center justify-between p-6 bg-slate-900/50 border-2 border-slate-700 rounded-3xl hover:border-yellow-500 transition-all active:scale-95">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-yellow-500/10 rounded-2xl text-yellow-500"><i data-lucide="lightbulb"></i></div>
+                    <div class="text-left"><p class="text-[10px] text-slate-500 uppercase">Penerangan</p><h2 class="font-bold text-lg">4 LAMPU</h2></div>
+                </div>
+                <span id="status-lampu" class="text-[10px] font-bold px-3 py-1 rounded-full bg-slate-800 text-slate-500">OFF</span>
             </button>
         </div>
-
-        <p class="mt-8 text-[10px] text-slate-600 uppercase font-mono tracking-tighter italic">Connected: ESP32-WROOM-C • Blynk Cloud</p>
+        
+        <p class="mt-8 text-[9px] text-slate-600 uppercase font-mono italic">Smart System by Ekolestiyo</p>
     </div>
 
     <script>
         lucide.createIcons();
         const blynkToken = "LEFHZSZHtuGUqimUSXVjg_0QKbdPDrFI";
+        let status = { v2: 0, v3: 0 };
 
-        function kontrolPintu(nilai) {
-            const statusText = document.getElementById('status-text');
-            const icon = document.getElementById('lock-icon');
-            const card = document.getElementById('status-card');
-
-            statusText.innerText = "PROSES...";
+        function kontrolAlat(pin, elementId) {
+            status[pin] = status[pin] === 0 ? 1 : 0;
+            const label = document.getElementById(elementId);
+            label.innerText = "WAIT...";
             
-            // Mengirim perintah ke Blynk Datastream V1
-            const url = `https://blynk.cloud/external/api/update?token=${blynkToken}&v1=${nilai}`;
-
-            fetch(url).then(() => {
-                if (nilai === 1) { // Jika BUKA (Switch ON)
-                    statusText.innerText = "TERBUKA";
-                    statusText.className = "text-3xl font-black italic text-green-400";
-                    icon.setAttribute('data-lucide', 'unlock');
-                    card.className = "mb-8 p-8 rounded-3xl border bg-green-900/10 border-green-500/30 transition-all duration-500";
-                } else { // Jika KUNCI (Switch OFF)
-                    statusText.innerText = "TERKUNCI";
-                    statusText.className = "text-3xl font-black italic text-slate-100";
-                    icon.setAttribute('data-lucide', 'lock');
-                    card.className = "mb-8 p-8 rounded-3xl border bg-slate-700/30 border-slate-600 transition-all duration-500";
-                }
-                lucide.createIcons();
-            }).catch(err => {
-                statusText.innerText = "OFFLINE";
-                console.error(err);
-            });
+            fetch(`https://blynk.cloud/external/api/update?token=${blynkToken}&${pin}=${status[pin]}`)
+                .then(() => {
+                    label.innerText = status[pin] ? "ON" : "OFF";
+                    label.className = status[pin] ? "text-[10px] font-bold px-3 py-1 rounded-full bg-green-500/20 text-green-400" : "text-[10px] font-bold px-3 py-1 rounded-full bg-slate-800 text-slate-500";
+                });
         }
     </script>
 </body>
