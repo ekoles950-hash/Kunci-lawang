@@ -3,156 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grab Ndeso - Pesan Antar Kampung</title>
+    <title>Grab Ndeso - Bakul Kampung</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        @keyframes drive {
-            0% { transform: translateX(0) translateY(0); }
-            50% { transform: translateX(5px) translateY(-2px); }
-            100% { transform: translateX(0) translateY(0); }
-        }
-        .motor-anim { animation: drive 0.5s infinite; }
-    </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans">
+<body class="bg-gray-50 pb-24">
 
-    <nav class="bg-green-600 p-4 text-white shadow-lg sticky top-0 z-50">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold tracking-tighter">🛵 GRAB NDESO</h1>
-            <span class="text-xs bg-green-800 px-2 py-1 rounded">Vercel Edition</span>
-        </div>
+    <nav class="bg-green-600 p-4 text-white sticky top-0 z-50 shadow-md">
+        <h1 class="text-xl font-bold italic text-center">🛵 GRAB NDESO</h1>
     </nav>
 
     <div class="container mx-auto p-4 max-w-md">
+        <h2 class="font-bold text-gray-700 mb-4">Pilih Menu Enak:</h2>
         
-        <div id="menu-section">
-            <h2 class="text-lg font-bold mb-4 flex items-center">
-                <span class="mr-2">🍴</span> Menu Spesial Hari Ini
-            </h2>
-            <div id="daftar-menu" class="grid gap-4">
-                <p class="text-gray-500 italic">Memuat menu enak...</p>
-            </div>
+        <div id="daftar-menu" class="grid grid-cols-2 gap-4">
+            <div class="animate-pulse bg-gray-200 h-40 rounded-xl"></div>
+            <div class="animate-pulse bg-gray-200 h-40 rounded-xl"></div>
         </div>
+    </div>
 
-        <div id="tracking-section" class="hidden mt-8 bg-white p-6 rounded-2xl shadow-xl border-t-4 border-green-500">
-            <h2 class="text-center text-gray-500 uppercase text-xs font-bold tracking-widest mb-4">Status Pengiriman</h2>
-            
-            <div class="relative h-2 bg-gray-200 rounded-full mb-10 mt-12">
-                <div id="progress-bar" class="absolute top-0 left-0 h-full bg-green-500 rounded-full transition-all duration-1000" style="width: 10%"></div>
-                <div id="motor-icon" class="absolute -top-10 transition-all duration-1000 motor-anim text-3xl" style="left: 0%">
-                    🛵
-                </div>
+    <div id="cart-bar" class="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-[0_-5px_15px_rgba(0,0,0,0.1)] hidden z-50">
+        <div class="flex justify-between items-center max-w-md mx-auto">
+            <div>
+                <p class="text-xs text-gray-500">Total Pesanan:</p>
+                <p id="total-harga" class="font-bold text-green-600">Rp 0</p>
             </div>
-
-            <div class="text-center">
-                <h3 id="status-text" class="text-xl font-bold text-green-700 capitalize">Menunggu Konfirmasi</h3>
-                <p id="status-desc" class="text-gray-500 text-sm mt-2">Pesananmu sudah dikirim ke pusat, sabar ya lur!</p>
-            </div>
-
-            <button onclick="window.location.reload()" class="mt-6 w-full text-blue-500 text-sm font-semibold">
-                ← Pesan Lagi
+            <button onclick="checkout()" class="bg-green-600 text-white px-6 py-2 rounded-full font-bold">
+                Beli Sekarang
             </button>
         </div>
-
     </div>
 
     <script>
-        // --- KONFIGURASI SUPABASE --- 
-        const SUPABASE_URL = 'https://butydxuauhtvwojvpixt.supabase.co'; // Sudah saya isi sesuai screenshotmu
-        const SUPABASE_KEY = 'https://butydxuauhtvwojvpixt.supabase.co/rest/v1/'; // WAJIB DIISI!
+        const SUPABASE_URL = 'https://butydxuauhtvwojvpixt.supabase.co';
+        const SUPABASE_KEY = 'MASUKKAN_ANON_KEY_KAMU'; // ISI LAGI DISINI BOS
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let keranjang = [];
 
-        // 1. Ambil Data Menu dari Tabel 'menu_makanan'
         async function loadMenu() {
-            const { data, error } = await supabase.from('menu_makanan').select('*');
-            const menuContainer = document.getElementById('daftar-menu');
+            const { data, error } = await supabaseClient.from('menu_makanan').select('*');
+            const container = document.getElementById('daftar-menu');
             
-            if (data && data.length > 0) {
-                menuContainer.innerHTML = '';
+            if (data) {
+                container.innerHTML = '';
                 data.forEach(item => {
-                    menuContainer.innerHTML += `
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
-                            <div>
-                                <h3 class="font-bold text-gray-800">${item.nama_makanan}</h3>
-                                <p class="text-green-600 font-semibold text-sm">Rp ${item.harga.toLocaleString()}</p>
+                    container.innerHTML += `
+                        <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                            <img src="${item.foto_url || 'https://via.placeholder.com/150?text=No+Image'}" class="w-full h-32 object-cover">
+                            <div class="p-3">
+                                <h3 class="font-bold text-sm h-10 overflow-hidden text-gray-800">${item.nama_makanan}</h3>
+                                <p class="text-green-600 font-bold mt-1">Rp ${item.harga.toLocaleString()}</p>
+                                <button onclick="tambahKeKeranjang('${item.nama_makanan}', ${item.harga})" 
+                                    class="w-full mt-3 border-2 border-green-500 text-green-600 py-1 rounded-lg text-xs font-bold hover:bg-green-50">
+                                    + Keranjang
+                                </button>
                             </div>
-                            <button onclick="buatPesanan('${item.nama_makanan}')" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition">
-                                Pesan
-                            </button>
                         </div>
                     `;
                 });
-            } else {
-                menuContainer.innerHTML = '<p class="text-center text-gray-400">Belum ada menu, isi dulu di Supabase ya!</p>';
             }
         }
 
-        // 2. Fungsi Kirim Pesanan
-        async function buatPesanan(namaMenu) {
-            const namaUser = prompt("Nama kamu siapa lur?");
-            const alamat = prompt("Alamat kirim (Misal: RT 02):");
+        function tambahKeKeranjang(nama, harga) {
+            keranjang.push({ nama, harga });
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const bar = document.getElementById('cart-bar');
+            const totalElement = document.getElementById('total-harga');
             
-            if (!namaUser || !alamat) return;
-
-            const { data, error } = await supabase
-                .from('pesanan_ojek')
-                .insert([{ 
-                    nama_pembeli: namaUser, 
-                    no_wa_pembeli: '08123', // Bisa dikembangkan pakai input
-                    alamat_kirim: alamat,
-                    status: 'pending' 
-                }])
-                .select();
-
-            if (data) {
-                mulaiTracking(data[0].id);
+            if (keranjang.length > 0) {
+                bar.classList.remove('hidden');
+                const total = keranjang.reduce((sum, item) => sum + item.harga, 0);
+                totalElement.innerText = `Rp ${total.toLocaleString()} (${keranjang.length} item)`;
             }
         }
 
-        // 3. Fungsi Realtime Tracking (Ini yang bikin motor jalan)
-        function mulaiTracking(orderId) {
-            document.getElementById('menu-section').classList.add('hidden');
-            document.getElementById('tracking-section').classList.remove('hidden');
+        async function checkout() {
+            const nama = prompt("Nama Pembeli:");
+            const alamat = prompt("Alamat Lengkap:");
+            if (!nama || !alamat) return;
 
-            // Dengerin perubahan status di database
-            supabase
-                .channel('status-realtime')
-                .on('postgres_changes', { 
-                    event: 'UPDATE', 
-                    schema: 'public', 
-                    table: 'pesanan_ojek',
-                    filter: `id=eq.${orderId}`
-                }, (payload) => {
-                    updateUI(payload.new.status);
-                })
-                .subscribe();
-        }
+            const total = keranjang.reduce((sum, item) => sum + item.harga, 0);
+            const detail = keranjang.map(i => i.nama).join(", ");
 
-        // 4. Update Tampilan Berdasarkan Status
-        function updateUI(status) {
-            const motor = document.getElementById('motor-icon');
-            const bar = document.getElementById('progress-bar');
-            const txt = document.getElementById('status-text');
-            const desc = document.getElementById('status-desc');
+            const { data, error } = await supabaseClient.from('pesanan_ojek').insert([
+                { nama_pembeli: nama, alamat_kirim: alamat, detail_pesanan: detail, total_bayar: total }
+            ]);
 
-            txt.innerText = status;
-
-            if (status === 'proses') {
-                motor.style.left = '40%';
-                bar.style.width = '45%';
-                desc.innerText = "Warungnya lagi masak pesananmu nih...";
-            } else if (status === 'dikirim') {
-                motor.style.left = '85%';
-                bar.style.width = '90%';
-                desc.innerText = "Driver lagi ngebut ke rumahmu, siapin uang pas ya!";
-                motor.innerHTML = "🏍️💨";
-            } else if (status === 'selesai') {
-                motor.style.left = '100%';
-                bar.style.width = '100%';
-                desc.innerText = "Pesanan sampai! Jangan lupa kasih bintang 5 🤣";
-                motor.innerHTML = "🏠";
+            if (!error) {
+                alert("Pesanan terkirim! Driver akan segera meluncur.");
+                keranjang = [];
+                document.getElementById('cart-bar').classList.add('hidden');
             }
         }
 
