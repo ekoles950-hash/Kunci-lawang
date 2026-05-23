@@ -5,76 +5,218 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warung Basecamp Coffee</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Memanggil library Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-stone-100 p-4 font-sans">
+<body class="bg-stone-100 font-sans pb-24"> <!-- pb-24 agar tidak tertutup bar keranjang -->
 
-    <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg rounded-xl overflow-hidden border border-stone-200">
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg overflow-hidden border border-stone-200 relative">
+        
+        <!-- Header -->
         <div class="bg-stone-800 text-amber-50 p-4 sticky top-0 z-10 shadow-md border-b-4 border-amber-600">
             <h1 class="text-2xl font-bold text-center tracking-wide">☕ Warung Basecamp Coffee</h1>
             <p class="text-center text-sm text-stone-300 mt-1">Layanan antar langsung ke tempatmu</p>
         </div>
 
+        <!-- Daftar Menu -->
         <div class="p-4 bg-stone-50 min-h-screen">
             <h2 class="text-lg font-bold mb-4 text-stone-800 border-b-2 border-stone-200 pb-2">Daftar Menu</h2>
             <div id="ruang-menu" class="grid grid-cols-2 gap-4">
                 <p class="col-span-2 text-center text-stone-500 py-10 font-medium animate-pulse">Menyiapkan menu...</p>
             </div>
         </div>
+
+        <!-- Bar Keranjang (Mulai tersembunyi) -->
+        <div id="bar-keranjang" class="hidden fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t-2 border-stone-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 z-20 flex justify-between items-center">
+            <div>
+                <p class="text-xs text-stone-500 font-bold uppercase">Total Pesanan</p>
+                <p id="total-harga-teks" class="text-lg font-extrabold text-amber-700">Rp 0</p>
+            </div>
+            <button onclick="bukaCheckout()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition">
+                Checkout (<span id="jumlah-item">0</span>)
+            </button>
+        </div>
+
+        <!-- Modal/Popup Checkout (Mulai tersembunyi) -->
+        <div id="modal-checkout" class="hidden fixed inset-0 bg-black/60 z-50 flex justify-center items-end sm:items-center">
+            <div class="bg-white w-full max-w-md p-6 rounded-t-2xl sm:rounded-2xl shadow-2xl animate-[slideUp_0.3s_ease-out]">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h2 class="text-xl font-bold text-stone-800">Detail Pengiriman</h2>
+                    <button onclick="tutupCheckout()" class="text-stone-400 hover:text-red-500 font-bold text-xl">&times;</button>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Form dengan Label di atas Input -->
+                    <div>
+                        <label class="block text-stone-700 font-bold text-sm mb-1" for="nama-pemesan">Nama Lengkap</label>
+                        <input type="text" id="nama-pemesan" class="w-full border-2 border-stone-300 rounded-lg p-2 focus:border-amber-500 focus:outline-none" placeholder="Contoh: Mas Hendri">
+                    </div>
+
+                    <div>
+                        <label class="block text-stone-700 font-bold text-sm mb-1" for="alamat-pemesan">Alamat / Catatan Lokasi</label>
+                        <textarea id="alamat-pemesan" rows="2" class="w-full border-2 border-stone-300 rounded-lg p-2 focus:border-amber-500 focus:outline-none" placeholder="Contoh: Basecamp / Dekat Sengkuni Net"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-stone-700 font-bold text-sm mb-1" for="metode-bayar">Metode Pembayaran</label>
+                        <select id="metode-bayar" class="w-full border-2 border-stone-300 rounded-lg p-2 bg-stone-50 text-stone-700 font-medium">
+                            <option value="COD">💵 Bayar di Tempat (COD)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <button id="btn-kirim" onclick="kirimPesanan()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg text-lg transition">
+                        Pesan Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
+        // Kredensial Supabase
         const SUPABASE_URL = 'https://butydxuauhtvwojvpixt.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_yO2CBmW5iJ8UKXw802hvXA_nAz3gr9X';
-
-        // PERBAIKAN: Mengganti nama variabel menjadi clientDB agar tidak macet
         const clientDB = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // Variabel Keranjang
+        let keranjang = [];
+        let totalHarga = 0;
+
+        // Fungsi Load Menu (Sama seperti sebelumnya)
         async function ambilDataMenu() {
             const ruangMenu = document.getElementById('ruang-menu');
-
             try {
-                // Menarik data dari tabel menu_warung
-                const { data, error } = await clientDB
-                    .from('menu_warung')
-                    .select('*')
-                    .order('nama_menu', { ascending: true });
-
+                const { data, error } = await clientDB.from('menu_warung').select('*').order('nama_menu', { ascending: true });
                 if (error) throw error; 
 
-                ruangMenu.innerHTML = ''; // Hapus tulisan "Menyiapkan menu..."
-
+                ruangMenu.innerHTML = ''; 
                 if (data.length === 0) {
-                    ruangMenu.innerHTML = '<p class="col-span-2 text-center text-stone-500 py-10">Belum ada menu (tabel kosong).</p>';
+                    ruangMenu.innerHTML = '<p class="col-span-2 text-center text-stone-500 py-10">Belum ada menu.</p>';
                     return;
                 }
 
                 data.forEach(item => {
                     const gambar = item.foto_url && item.foto_url !== "" ? item.foto_url : 'https://placehold.co/400x300/e7e5e4/a8a29e?text=No+Image';
-
                     const kadMenuHTML = `
-                        <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden flex flex-col relative group">
+                        <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden flex flex-col relative">
                             <img src="${gambar}" alt="${item.nama_menu}" class="w-full h-32 object-cover">
                             <div class="p-3 flex flex-col flex-grow">
                                 <h3 class="font-bold text-stone-800 text-sm leading-tight flex-grow">${item.nama_menu}</h3>
                                 <p class="text-amber-700 font-extrabold text-sm mt-2">Rp ${item.harga.toLocaleString('id-ID')}</p>
-                                <button onclick="alert('Pesanan ${item.nama_menu} masuk!')" class="mt-3 w-full bg-amber-600 text-white font-bold text-xs py-2.5 rounded-lg">
-                                    + Pesan
+                                <button onclick="tambahKeKeranjang('${item.nama_menu}', ${item.harga})" class="mt-3 w-full bg-amber-600 text-white font-bold text-xs py-2.5 rounded-lg active:bg-amber-800">
+                                    + Tambah
                                 </button>
                             </div>
                         </div>
                     `;
                     ruangMenu.innerHTML += kadMenuHTML;
                 });
-
             } catch (err) {
-                console.error("Error lengkap:", err);
-                ruangMenu.innerHTML = `<div class="col-span-2 bg-red-100 p-4 rounded-lg text-red-700 text-sm font-bold border border-red-300">Gagal memuat data!<br><br>Pesan Error: ${err.message}</div>`;
+                console.error(err);
+                ruangMenu.innerHTML = `<p class="col-span-2 text-center text-red-500">Gagal memuat: ${err.message}</p>`;
             }
         }
 
-        // Jalankan fungsi
+        // Fungsi Tambah ke Keranjang
+        function tambahKeKeranjang(nama, harga) {
+            // Cek apakah barang sudah ada di keranjang
+            const itemAda = keranjang.find(item => item.nama === nama);
+            if (itemAda) {
+                itemAda.jumlah += 1;
+            } else {
+                keranjang.push({ nama: nama, harga: harga, jumlah: 1 });
+            }
+            
+            updateTampilanKeranjang();
+        }
+
+        // Fungsi Update Bar Keranjang Bawah
+        function updateTampilanKeranjang() {
+            const barKeranjang = document.getElementById('bar-keranjang');
+            const totalTeks = document.getElementById('total-harga-teks');
+            const jumlahItem = document.getElementById('jumlah-item');
+
+            if (keranjang.length === 0) {
+                barKeranjang.classList.add('hidden');
+                return;
+            }
+
+            barKeranjang.classList.remove('hidden');
+            
+            // Hitung total item dan total harga
+            let totalQty = 0;
+            totalHarga = 0;
+            keranjang.forEach(item => {
+                totalQty += item.jumlah;
+                totalHarga += (item.harga * item.jumlah);
+            });
+
+            jumlahItem.innerText = totalQty;
+            totalTeks.innerText = `Rp ${totalHarga.toLocaleString('id-ID')}`;
+        }
+
+        // Fungsi Buka & Tutup Checkout
+        function bukaCheckout() {
+            document.getElementById('modal-checkout').classList.remove('hidden');
+        }
+        function tutupCheckout() {
+            document.getElementById('modal-checkout').classList.add('hidden');
+        }
+
+        // Fungsi Kirim Pesanan ke Supabase
+        async function kirimPesanan() {
+            const nama = document.getElementById('nama-pemesan').value;
+            const alamat = document.getElementById('alamat-pemesan').value;
+            const metode = document.getElementById('metode-bayar').value;
+            const btnKirim = document.getElementById('btn-kirim');
+
+            if (!nama || !alamat) {
+                alert("Harap isi Nama dan Alamat pengiriman!");
+                return;
+            }
+
+            // Ubah tombol jadi loading
+            btnKirim.innerText = "Memproses...";
+            btnKirim.disabled = true;
+            btnKirim.classList.replace('bg-green-600', 'bg-stone-400');
+
+            try {
+                // Simpan ke tabel pesanan_warung
+                const { error } = await clientDB.from('pesanan_warung').insert([
+                    {
+                        nama_pemesan: nama,
+                        alamat: alamat,
+                        metode_pembayaran: metode,
+                        total_harga: totalHarga,
+                        detail_pesanan: keranjang // JSON format otomatis
+                    }
+                ]);
+
+                if (error) throw error;
+
+                alert("✅ Pesanan berhasil dikirim! Mohon tunggu, pesanan segera diantar.");
+                
+                // Reset keranjang setelah sukses
+                keranjang = [];
+                updateTampilanKeranjang();
+                tutupCheckout();
+                
+                // Kosongkan form
+                document.getElementById('nama-pemesan').value = '';
+                document.getElementById('alamat-pemesan').value = '';
+
+            } catch (err) {
+                alert("Gagal mengirim pesanan: " + err.message);
+            } finally {
+                // Kembalikan tombol seperti semula
+                btnKirim.innerText = "Pesan Sekarang";
+                btnKirim.disabled = false;
+                btnKirim.classList.replace('bg-stone-400', 'bg-green-600');
+            }
+        }
+
         ambilDataMenu();
     </script>
 </body>
