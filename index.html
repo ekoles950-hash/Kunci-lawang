@@ -9,6 +9,13 @@
 </head>
 <body class="bg-stone-100 font-sans pb-10">
 
+    <!-- Tempat Notifikasi Melayang (Toast) ala Aplikasi Modern -->
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 -translate-y-24 opacity-0 z-[100] transition-all duration-300 pointer-events-none">
+        <div id="toast-content" class="px-6 py-3 rounded-full shadow-2xl text-sm font-bold text-white flex items-center gap-2">
+            <!-- Isi pesan masuk otomatis di sini -->
+        </div>
+    </div>
+
     <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg overflow-hidden border border-stone-200 relative">
         
         <!-- Header -->
@@ -24,7 +31,7 @@
             <div class="flex justify-between items-center mb-4 border-b-2 border-stone-200 pb-2 sticky top-[76px] bg-stone-50 z-10 py-2">
                 <h2 class="text-lg font-bold text-stone-800">Daftar Menu</h2>
                 
-                <!-- Tombol Keranjang (Tersembunyi jika kosong) -->
+                <!-- Tombol Keranjang -->
                 <button id="keranjang-samping" onclick="bukaCheckout()" class="hidden flex items-center gap-2 bg-amber-600 text-white px-4 py-1.5 rounded-full shadow-md hover:bg-amber-700 transition active:scale-95">
                     <span class="text-sm font-bold">🛒 <span id="jumlah-item-samping" class="bg-white text-amber-700 px-2 py-0.5 rounded-full ml-1">0</span></span>
                 </button>
@@ -90,6 +97,31 @@
         let keranjang = [];
         let totalHarga = 0;
 
+        // Fungsi Notifikasi Modern (Toast)
+        function tampilkanNotifikasi(pesan, tipe = 'sukses') {
+            const toast = document.getElementById('toast');
+            const toastContent = document.getElementById('toast-content');
+
+            // Atur warna dan ikon berdasarkan tipe
+            if (tipe === 'sukses') {
+                toastContent.className = 'px-6 py-3 rounded-full shadow-2xl text-sm font-bold text-white flex items-center gap-2 bg-green-600 border border-green-400';
+                toastContent.innerHTML = `<span class="text-lg leading-none">✅</span> <span>${pesan}</span>`;
+            } else {
+                toastContent.className = 'px-6 py-3 rounded-full shadow-2xl text-sm font-bold text-white flex items-center gap-2 bg-red-500 border border-red-400';
+                toastContent.innerHTML = `<span class="text-lg leading-none">⚠️</span> <span>${pesan}</span>`;
+            }
+
+            // Animasi Muncul ke Layar
+            toast.classList.remove('-translate-y-24', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            // Otomatis Hilang setelah 3 Detik
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('-translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+
         async function ambilDataMenu() {
             const ruangMenu = document.getElementById('ruang-menu');
             try {
@@ -110,7 +142,6 @@
                             <div class="p-3 flex flex-col flex-grow">
                                 <h3 class="font-bold text-stone-800 text-sm leading-tight flex-grow">${item.nama_menu}</h3>
                                 <p class="text-amber-700 font-extrabold text-sm mt-2">Rp ${item.harga.toLocaleString('id-ID')}</p>
-                                <!-- Tombol Diganti Menjadi BELI -->
                                 <button onclick="tambahKeKeranjang('${item.nama_menu}', ${item.harga})" class="mt-3 w-full bg-amber-600 text-white font-bold text-xs py-2.5 rounded-lg active:bg-amber-800 transition">
                                     BELI
                                 </button>
@@ -133,7 +164,6 @@
             }
             updateTampilanKeranjang();
             
-            // Efek animasi kecil saat tombol beli ditekan
             const tombolKeranjang = document.getElementById('keranjang-samping');
             tombolKeranjang.classList.add('scale-110');
             setTimeout(() => tombolKeranjang.classList.remove('scale-110'), 200);
@@ -161,7 +191,6 @@
                 const subtotal = item.harga * item.jumlah;
                 totalHarga += subtotal;
                 
-                // Format isi ringkasan keranjang di dalam popup
                 listHTML += `
                     <div class="flex justify-between items-center">
                         <span>${item.jumlah}x ${item.nama}</span>
@@ -189,7 +218,7 @@
             const btnKirim = document.getElementById('btn-kirim');
 
             if (!nama) {
-                alert("Harap isi Nama pemesan!");
+                tampilkanNotifikasi("Harap isi Nama Pemesan!", "error");
                 return;
             }
 
@@ -210,7 +239,8 @@
 
                 if (error) throw error;
 
-                alert("✅ Pesanan berhasil dikirim!");
+                // Memanggil notifikasi modern
+                tampilkanNotifikasi("Pesanan berhasil dikirim!");
                 
                 keranjang = [];
                 updateTampilanKeranjang();
@@ -218,7 +248,7 @@
                 document.getElementById('nama-pemesan').value = '';
 
             } catch (err) {
-                alert("Gagal mengirim pesanan: " + err.message);
+                tampilkanNotifikasi("Gagal mengirim pesanan!", "error");
             } finally {
                 btnKirim.innerText = "Pesan Sekarang";
                 btnKirim.disabled = false;
