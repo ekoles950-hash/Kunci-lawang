@@ -50,7 +50,7 @@
 
             // Mengambil data dari tabel menu_warung
             const { data, error } = await supabase
-                .from('menu_warung')
+                .from(menu_warung)
                 .select('*')
                 .order('nama_menu', { ascending: true });
 
