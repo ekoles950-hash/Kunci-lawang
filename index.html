@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-stone-100 font-sans pb-24">
+<body class="bg-stone-100 font-sans pb-10">
 
     <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg overflow-hidden border border-stone-200 relative">
         
@@ -17,51 +17,63 @@
             <p class="text-center text-sm text-stone-300 mt-1">Layanan antar langsung ke tempatmu</p>
         </div>
 
-        <!-- Daftar Menu -->
+        <!-- Area Menu & Keranjang -->
         <div class="p-4 bg-stone-50 min-h-screen">
-            <h2 class="text-lg font-bold mb-4 text-stone-800 border-b-2 border-stone-200 pb-2">Daftar Menu</h2>
+            
+            <!-- Judul & Tombol Keranjang Samping -->
+            <div class="flex justify-between items-center mb-4 border-b-2 border-stone-200 pb-2 sticky top-[76px] bg-stone-50 z-10 py-2">
+                <h2 class="text-lg font-bold text-stone-800">Daftar Menu</h2>
+                
+                <!-- Tombol Keranjang (Tersembunyi jika kosong) -->
+                <button id="keranjang-samping" onclick="bukaCheckout()" class="hidden flex items-center gap-2 bg-amber-600 text-white px-4 py-1.5 rounded-full shadow-md hover:bg-amber-700 transition active:scale-95">
+                    <span class="text-sm font-bold">🛒 <span id="jumlah-item-samping" class="bg-white text-amber-700 px-2 py-0.5 rounded-full ml-1">0</span></span>
+                </button>
+            </div>
+
+            <!-- Daftar Menu Grid -->
             <div id="ruang-menu" class="grid grid-cols-2 gap-4">
                 <p class="col-span-2 text-center text-stone-500 py-10 font-medium animate-pulse">Menyiapkan menu...</p>
             </div>
         </div>
 
-        <!-- Bar Keranjang -->
-        <div id="bar-keranjang" class="hidden fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t-2 border-stone-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 z-20 flex justify-between items-center">
-            <div>
-                <p class="text-xs text-stone-500 font-bold uppercase">Total Pesanan</p>
-                <p id="total-harga-teks" class="text-lg font-extrabold text-amber-700">Rp 0</p>
-            </div>
-            <button onclick="bukaCheckout()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition">
-                Checkout (<span id="jumlah-item">0</span>)
-            </button>
-        </div>
-
-        <!-- Modal/Popup Checkout (Revisi: Hanya Nama) -->
+        <!-- Modal/Popup Checkout -->
         <div id="modal-checkout" class="hidden fixed inset-0 bg-black/60 z-50 flex justify-center items-end sm:items-center">
             <div class="bg-white w-full max-w-md p-6 rounded-t-2xl sm:rounded-2xl shadow-2xl animate-[slideUp_0.3s_ease-out]">
                 <div class="flex justify-between items-center mb-4 border-b pb-2">
                     <h2 class="text-xl font-bold text-stone-800">Detail Pesanan</h2>
-                    <button onclick="tutupCheckout()" class="text-stone-400 hover:text-red-500 font-bold text-xl">&times;</button>
+                    <button onclick="tutupCheckout()" class="text-stone-400 hover:text-red-500 font-bold text-3xl leading-none">&times;</button>
+                </div>
+
+                <!-- Ringkasan Belanja -->
+                <div class="mb-4 bg-stone-100 p-3 rounded-lg border border-stone-200">
+                    <p class="text-xs font-bold text-stone-500 uppercase mb-2 border-b border-stone-300 pb-1">Pesanan Anda:</p>
+                    <div id="daftar-pesanan-checkout" class="text-sm text-stone-700 space-y-1 mb-2 max-h-24 overflow-y-auto">
+                        <!-- List item masuk sini -->
+                    </div>
+                    <div class="flex justify-between items-center border-t border-stone-300 pt-2 mt-2">
+                        <span class="font-bold text-stone-800">Total Harga:</span>
+                        <span id="total-harga-checkout" class="font-extrabold text-amber-700 text-lg">Rp 0</span>
+                    </div>
                 </div>
 
                 <div class="space-y-4">
                     <!-- Form Nama -->
                     <div>
                         <label class="block text-stone-700 font-bold text-sm mb-1" for="nama-pemesan">Nama Pemesan</label>
-                        <input type="text" id="nama-pemesan" class="w-full border-2 border-stone-300 rounded-lg p-2 focus:border-amber-500 focus:outline-none" placeholder="Masukkan nama...">
+                        <input type="text" id="nama-pemesan" class="w-full border-2 border-stone-300 rounded-lg p-2 focus:border-amber-500 focus:outline-none bg-white" placeholder="Masukkan nama...">
                     </div>
 
                     <!-- Form Metode Pembayaran -->
                     <div>
                         <label class="block text-stone-700 font-bold text-sm mb-1" for="metode-bayar">Metode Pembayaran</label>
-                        <select id="metode-bayar" class="w-full border-2 border-stone-300 rounded-lg p-2 bg-stone-50 text-stone-700 font-medium">
+                        <select id="metode-bayar" class="w-full border-2 border-stone-300 rounded-lg p-2 bg-stone-50 text-stone-700 font-medium outline-none focus:border-amber-500">
                             <option value="COD">💵 Bayar di Tempat (COD)</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="mt-6">
-                    <button id="btn-kirim" onclick="kirimPesanan()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg text-lg transition">
+                    <button id="btn-kirim" onclick="kirimPesanan()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-lg text-lg transition active:scale-95">
                         Pesan Sekarang
                     </button>
                 </div>
@@ -98,8 +110,9 @@
                             <div class="p-3 flex flex-col flex-grow">
                                 <h3 class="font-bold text-stone-800 text-sm leading-tight flex-grow">${item.nama_menu}</h3>
                                 <p class="text-amber-700 font-extrabold text-sm mt-2">Rp ${item.harga.toLocaleString('id-ID')}</p>
+                                <!-- Tombol Diganti Menjadi BELI -->
                                 <button onclick="tambahKeKeranjang('${item.nama_menu}', ${item.harga})" class="mt-3 w-full bg-amber-600 text-white font-bold text-xs py-2.5 rounded-lg active:bg-amber-800 transition">
-                                    + Tambah
+                                    BELI
                                 </button>
                             </div>
                         </div>
@@ -119,29 +132,47 @@
                 keranjang.push({ nama: nama, harga: harga, jumlah: 1 });
             }
             updateTampilanKeranjang();
+            
+            // Efek animasi kecil saat tombol beli ditekan
+            const tombolKeranjang = document.getElementById('keranjang-samping');
+            tombolKeranjang.classList.add('scale-110');
+            setTimeout(() => tombolKeranjang.classList.remove('scale-110'), 200);
         }
 
         function updateTampilanKeranjang() {
-            const barKeranjang = document.getElementById('bar-keranjang');
-            const totalTeks = document.getElementById('total-harga-teks');
-            const jumlahItem = document.getElementById('jumlah-item');
+            const keranjangSamping = document.getElementById('keranjang-samping');
+            const jumlahItemSamping = document.getElementById('jumlah-item-samping');
+            const daftarPesananCheckout = document.getElementById('daftar-pesanan-checkout');
+            const totalHargaCheckout = document.getElementById('total-harga-checkout');
 
             if (keranjang.length === 0) {
-                barKeranjang.classList.add('hidden');
+                keranjangSamping.classList.add('hidden');
                 return;
             }
 
-            barKeranjang.classList.remove('hidden');
+            keranjangSamping.classList.remove('hidden');
             
             let totalQty = 0;
             totalHarga = 0;
+            let listHTML = '';
+
             keranjang.forEach(item => {
                 totalQty += item.jumlah;
-                totalHarga += (item.harga * item.jumlah);
+                const subtotal = item.harga * item.jumlah;
+                totalHarga += subtotal;
+                
+                // Format isi ringkasan keranjang di dalam popup
+                listHTML += `
+                    <div class="flex justify-between items-center">
+                        <span>${item.jumlah}x ${item.nama}</span>
+                        <span class="font-medium">Rp ${subtotal.toLocaleString('id-ID')}</span>
+                    </div>
+                `;
             });
 
-            jumlahItem.innerText = totalQty;
-            totalTeks.innerText = `Rp ${totalHarga.toLocaleString('id-ID')}`;
+            jumlahItemSamping.innerText = totalQty;
+            daftarPesananCheckout.innerHTML = listHTML;
+            totalHargaCheckout.innerText = `Rp ${totalHarga.toLocaleString('id-ID')}`;
         }
 
         function bukaCheckout() {
@@ -170,7 +201,7 @@
                 const { error } = await clientDB.from('pesanan_warung').insert([
                     {
                         nama_pemesan: nama,
-                        alamat: "-", // Otomatis disi strip agar database tidak error
+                        alamat: "-", 
                         metode_pembayaran: metode,
                         total_harga: totalHarga,
                         detail_pesanan: keranjang
