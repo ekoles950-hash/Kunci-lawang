@@ -6,13 +6,22 @@
     <title>Warung Basecamp Coffee</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* CSS tambahan untuk menyembunyikan scrollbar tapi tetap bisa di-scroll */
+        .hide-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
 </head>
 <body class="bg-stone-100 font-sans pb-10">
 
-    <!-- Tempat Notifikasi Melayang (Toast) ala Aplikasi Modern -->
-    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 -translate-y-24 opacity-0 z-[100] transition-all duration-300 pointer-events-none">
-        <div id="toast-content" class="px-6 py-3 rounded-full shadow-2xl text-sm font-bold text-white flex items-center gap-2">
-            <!-- Isi pesan masuk otomatis di sini -->
+    <!-- Toast Notifikasi -->
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 -translate-y-24 opacity-0 z-[100] transition-all duration-300 pointer-events-none w-[90%] max-w-sm">
+        <div id="toast-content" class="px-6 py-3 rounded-full shadow-2xl text-sm font-bold text-white flex items-center justify-center gap-2">
         </div>
     </div>
 
@@ -28,13 +37,17 @@
         <div class="p-4 bg-stone-50 min-h-screen">
             
             <!-- Judul & Tombol Keranjang Samping -->
-            <div class="flex justify-between items-center mb-4 border-b-2 border-stone-200 pb-2 sticky top-[76px] bg-stone-50 z-10 py-2">
+            <div class="flex justify-between items-center mb-3 sticky top-[76px] bg-stone-50 z-10 pt-2 pb-1">
                 <h2 class="text-lg font-bold text-stone-800">Daftar Menu</h2>
                 
-                <!-- Tombol Keranjang -->
                 <button id="keranjang-samping" onclick="bukaCheckout()" class="hidden flex items-center gap-2 bg-amber-600 text-white px-4 py-1.5 rounded-full shadow-md hover:bg-amber-700 transition active:scale-95">
                     <span class="text-sm font-bold">🛒 <span id="jumlah-item-samping" class="bg-white text-amber-700 px-2 py-0.5 rounded-full ml-1">0</span></span>
                 </button>
+            </div>
+
+            <!-- Area Tombol Filter Kategori (Bisa di-scroll ke samping) -->
+            <div id="kategori-container" class="flex gap-2 overflow-x-auto hide-scroll mb-4 pb-2 border-b-2 border-stone-200 sticky top-[116px] bg-stone-50 z-10">
+                <!-- Tombol kategori akan muncul otomatis di sini -->
             </div>
 
             <!-- Daftar Menu Grid -->
@@ -43,7 +56,7 @@
             </div>
         </div>
 
-        <!-- Modal/Popup Checkout -->
+        <!-- Modal Checkout -->
         <div id="modal-checkout" class="hidden fixed inset-0 bg-black/60 z-50 flex justify-center items-end sm:items-center">
             <div class="bg-white w-full max-w-md p-6 rounded-t-2xl sm:rounded-2xl shadow-2xl animate-[slideUp_0.3s_ease-out]">
                 <div class="flex justify-between items-center mb-4 border-b pb-2">
@@ -51,12 +64,9 @@
                     <button onclick="tutupCheckout()" class="text-stone-400 hover:text-red-500 font-bold text-3xl leading-none">&times;</button>
                 </div>
 
-                <!-- Ringkasan Belanja -->
                 <div class="mb-4 bg-stone-100 p-3 rounded-lg border border-stone-200">
                     <p class="text-xs font-bold text-stone-500 uppercase mb-2 border-b border-stone-300 pb-1">Pesanan Anda:</p>
-                    <div id="daftar-pesanan-checkout" class="text-sm text-stone-700 space-y-1 mb-2 max-h-24 overflow-y-auto">
-                        <!-- List item masuk sini -->
-                    </div>
+                    <div id="daftar-pesanan-checkout" class="text-sm text-stone-700 space-y-1 mb-2 max-h-24 overflow-y-auto"></div>
                     <div class="flex justify-between items-center border-t border-stone-300 pt-2 mt-2">
                         <span class="font-bold text-stone-800">Total Harga:</span>
                         <span id="total-harga-checkout" class="font-extrabold text-amber-700 text-lg">Rp 0</span>
@@ -64,13 +74,10 @@
                 </div>
 
                 <div class="space-y-4">
-                    <!-- Form Nama -->
                     <div>
                         <label class="block text-stone-700 font-bold text-sm mb-1" for="nama-pemesan">Nama Pemesan</label>
                         <input type="text" id="nama-pemesan" class="w-full border-2 border-stone-300 rounded-lg p-2 focus:border-amber-500 focus:outline-none bg-white" placeholder="Masukkan nama...">
                     </div>
-
-                    <!-- Form Metode Pembayaran -->
                     <div>
                         <label class="block text-stone-700 font-bold text-sm mb-1" for="metode-bayar">Metode Pembayaran</label>
                         <select id="metode-bayar" class="w-full border-2 border-stone-300 rounded-lg p-2 bg-stone-50 text-stone-700 font-medium outline-none focus:border-amber-500">
@@ -96,26 +103,24 @@
 
         let keranjang = [];
         let totalHarga = 0;
+        let semuaMenuDB = []; // Menyimpan semua data menu
+        let kategoriSaatIni = 'Semua'; // Kategori yang sedang dipilih
 
-        // Fungsi Notifikasi Modern (Toast)
         function tampilkanNotifikasi(pesan, tipe = 'sukses') {
             const toast = document.getElementById('toast');
             const toastContent = document.getElementById('toast-content');
 
-            // Atur warna dan ikon berdasarkan tipe
             if (tipe === 'sukses') {
-                toastContent.className = 'px-6 py-3 rounded-full shadow-2xl text-sm font-bold text-white flex items-center gap-2 bg-green-600 border border-green-400';
+                toastContent.className = 'px-6 py-3 rounded-full shadow-2xl text-sm font-bold text-white flex items-center justify-center gap-2 bg-green-600 border border-green-400 w-full';
                 toastContent.innerHTML = `<span class="text-lg leading-none">✅</span> <span>${pesan}</span>`;
             } else {
-                toastContent.className = 'px-6 py-3 rounded-full shadow-2xl text-sm font-bold text-white flex items-center gap-2 bg-red-500 border border-red-400';
+                toastContent.className = 'px-6 py-3 rounded-full shadow-2xl text-sm font-bold text-white flex items-center justify-center gap-2 bg-red-500 border border-red-400 w-full';
                 toastContent.innerHTML = `<span class="text-lg leading-none">⚠️</span> <span>${pesan}</span>`;
             }
 
-            // Animasi Muncul ke Layar
             toast.classList.remove('-translate-y-24', 'opacity-0');
             toast.classList.add('translate-y-0', 'opacity-100');
 
-            // Otomatis Hilang setelah 3 Detik
             setTimeout(() => {
                 toast.classList.remove('translate-y-0', 'opacity-100');
                 toast.classList.add('-translate-y-24', 'opacity-0');
@@ -123,36 +128,86 @@
         }
 
         async function ambilDataMenu() {
-            const ruangMenu = document.getElementById('ruang-menu');
             try {
                 const { data, error } = await clientDB.from('menu_warung').select('*').order('nama_menu', { ascending: true });
                 if (error) throw error; 
 
-                ruangMenu.innerHTML = ''; 
-                if (data.length === 0) {
-                    ruangMenu.innerHTML = '<p class="col-span-2 text-center text-stone-500 py-10">Belum ada menu.</p>';
-                    return;
-                }
+                semuaMenuDB = data; // Simpan data ke variabel global
+                
+                renderTombolKategori();
+                renderMenu(); // Tampilkan menu berdasarkan kategoriSaatIni
 
-                data.forEach(item => {
-                    const gambar = item.foto_url && item.foto_url !== "" ? item.foto_url : 'https://placehold.co/400x300/e7e5e4/a8a29e?text=No+Image';
-                    const kadMenuHTML = `
-                        <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden flex flex-col relative group">
-                            <img src="${gambar}" alt="${item.nama_menu}" class="w-full h-32 object-cover">
-                            <div class="p-3 flex flex-col flex-grow">
-                                <h3 class="font-bold text-stone-800 text-sm leading-tight flex-grow">${item.nama_menu}</h3>
-                                <p class="text-amber-700 font-extrabold text-sm mt-2">Rp ${item.harga.toLocaleString('id-ID')}</p>
-                                <button onclick="tambahKeKeranjang('${item.nama_menu}', ${item.harga})" class="mt-3 w-full bg-amber-600 text-white font-bold text-xs py-2.5 rounded-lg active:bg-amber-800 transition">
-                                    BELI
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    ruangMenu.innerHTML += kadMenuHTML;
-                });
             } catch (err) {
-                ruangMenu.innerHTML = `<p class="col-span-2 text-center text-red-500 font-bold text-sm">Error: ${err.message}</p>`;
+                document.getElementById('ruang-menu').innerHTML = `<p class="col-span-2 text-center text-red-500 font-bold text-sm">Error: ${err.message}</p>`;
             }
+        }
+
+        function renderTombolKategori() {
+            const container = document.getElementById('kategori-container');
+            container.innerHTML = '';
+
+            // Ambil nama kategori yang unik dari database (jika kosong, masuk ke "Lainnya")
+            let listKategori = ['Semua'];
+            semuaMenuDB.forEach(item => {
+                let kat = item.kategori ? item.kategori.trim() : 'Lainnya';
+                if (!listKategori.includes(kat)) {
+                    listKategori.push(kat);
+                }
+            });
+
+            // Buat tombol HTML
+            listKategori.forEach(kat => {
+                const isAktif = kat === kategoriSaatIni;
+                const classTombol = isAktif 
+                    ? 'bg-amber-600 text-white border-amber-600 shadow-sm' // Warna aktif
+                    : 'bg-white text-stone-600 border-stone-300 hover:bg-stone-100'; // Warna tidak aktif
+
+                container.innerHTML += `
+                    <button onclick="pilihKategori('${kat}')" class="${classTombol} px-4 py-1.5 rounded-full text-sm font-bold border whitespace-nowrap transition">
+                        ${kat}
+                    </button>
+                `;
+            });
+        }
+
+        function pilihKategori(kategoriPilihan) {
+            kategoriSaatIni = kategoriPilihan;
+            renderTombolKategori(); // Update warna tombol
+            renderMenu(); // Update daftar barang
+        }
+
+        function renderMenu() {
+            const ruangMenu = document.getElementById('ruang-menu');
+            ruangMenu.innerHTML = ''; 
+
+            // Filter data sesuai tombol yang diklik
+            const dataDisaring = semuaMenuDB.filter(item => {
+                if (kategoriSaatIni === 'Semua') return true;
+                const katItem = item.kategori ? item.kategori.trim() : 'Lainnya';
+                return katItem === kategoriSaatIni;
+            });
+
+            if (dataDisaring.length === 0) {
+                ruangMenu.innerHTML = '<p class="col-span-2 text-center text-stone-500 py-10">Belum ada menu di kategori ini.</p>';
+                return;
+            }
+
+            dataDisaring.forEach(item => {
+                const gambar = item.foto_url && item.foto_url !== "" ? item.foto_url : 'https://placehold.co/400x300/e7e5e4/a8a29e?text=No+Image';
+                const kadMenuHTML = `
+                    <div class="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden flex flex-col relative group">
+                        <img src="${gambar}" alt="${item.nama_menu}" class="w-full h-32 object-cover">
+                        <div class="p-3 flex flex-col flex-grow">
+                            <h3 class="font-bold text-stone-800 text-sm leading-tight flex-grow">${item.nama_menu}</h3>
+                            <p class="text-amber-700 font-extrabold text-sm mt-2">Rp ${item.harga.toLocaleString('id-ID')}</p>
+                            <button onclick="tambahKeKeranjang('${item.nama_menu}', ${item.harga})" class="mt-3 w-full bg-amber-600 text-white font-bold text-xs py-2.5 rounded-lg active:bg-amber-800 transition shadow-sm">
+                                BELI
+                            </button>
+                        </div>
+                    </div>
+                `;
+                ruangMenu.innerHTML += kadMenuHTML;
+            });
         }
 
         function tambahKeKeranjang(nama, harga) {
@@ -239,7 +294,6 @@
 
                 if (error) throw error;
 
-                // Memanggil notifikasi modern
                 tampilkanNotifikasi("Pesanan berhasil dikirim!");
                 
                 keranjang = [];
@@ -256,6 +310,7 @@
             }
         }
 
+        // Jalankan saat web dibuka
         ambilDataMenu();
     </script>
 </body>
