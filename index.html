@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Warung Basecamp Coffee</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Memanggil library Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-stone-100 p-4 font-sans">
@@ -24,24 +25,25 @@
     </div>
 
     <script>
-        // Kredensial yang SUDAH BENAR
         const SUPABASE_URL = 'https://butydxuauhtvwojvpixt.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_yO2CBmW5iJ8UKXw802hvXA_nAz3gr9X';
 
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // PERBAIKAN: Mengganti nama variabel menjadi clientDB agar tidak macet
+        const clientDB = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function ambilDataMenu() {
             const ruangMenu = document.getElementById('ruang-menu');
 
             try {
-                const { data, error } = await supabase
+                // Menarik data dari tabel menu_warung
+                const { data, error } = await clientDB
                     .from('menu_warung')
                     .select('*')
                     .order('nama_menu', { ascending: true });
 
-                if (error) throw error; // Lempar error jika ada masalah
+                if (error) throw error; 
 
-                ruangMenu.innerHTML = ''; // Kosongkan text loading
+                ruangMenu.innerHTML = ''; // Hapus tulisan "Menyiapkan menu..."
 
                 if (data.length === 0) {
                     ruangMenu.innerHTML = '<p class="col-span-2 text-center text-stone-500 py-10">Belum ada menu (tabel kosong).</p>';
@@ -67,12 +69,12 @@
                 });
 
             } catch (err) {
-                // Tampilkan pesan error di layar web jika gagal
                 console.error("Error lengkap:", err);
                 ruangMenu.innerHTML = `<div class="col-span-2 bg-red-100 p-4 rounded-lg text-red-700 text-sm font-bold border border-red-300">Gagal memuat data!<br><br>Pesan Error: ${err.message}</div>`;
             }
         }
 
+        // Jalankan fungsi
         ambilDataMenu();
     </script>
 </body>
