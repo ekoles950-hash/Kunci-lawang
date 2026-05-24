@@ -29,7 +29,6 @@
 </head>
 <body class="bg-stone-100 font-sans pb-24">
 
-    <!-- Toast Notifikasi -->
     <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 -translate-y-24 opacity-0 z-[100] transition-all duration-300 pointer-events-none w-[90%] max-w-sm">
         <div id="toast-content" class="px-6 py-3 rounded-full shadow-2xl text-sm font-bold text-white flex items-center justify-center gap-2"></div>
     </div>
@@ -41,20 +40,17 @@
             <p class="text-center text-sm text-stone-200 mt-1">warung kopi siap antar🛵</p>
         </div>
 
-        <!-- HALAMAN BERANDA -->
         <div class="p-4 bg-stone-50 min-h-screen" id="halaman-beranda">
             <h2 class="text-lg font-bold text-stone-800 mb-3 sticky top-[92px] bg-stone-50 z-10 pt-2 pb-1">Daftar Menu</h2>
             <div id="kategori-container" class="flex gap-2 overflow-x-auto hide-scroll mb-4 pb-2 border-b-2 border-stone-200 sticky top-[132px] bg-stone-50 z-10"></div>
             <div id="ruang-menu" class="grid grid-cols-2 gap-4"></div>
         </div>
 
-        <!-- HALAMAN RIWAYAT -->
         <div class="p-4 bg-stone-50 min-h-screen hidden" id="halaman-riwayat">
             <h2 class="text-lg font-bold text-stone-800 mb-4 border-b-2 border-stone-200 pb-2">Status Pesanan Anda</h2>
             <div id="daftar-riwayat" class="space-y-4"></div>
         </div>
 
-        <!-- Modal Checkout -->
         <div id="modal-checkout" class="hidden fixed inset-0 bg-black/60 z-50 flex justify-center items-end sm:items-center">
             <div class="bg-white w-full max-w-md p-6 rounded-t-2xl sm:rounded-2xl shadow-2xl animate-[slideUp_0.3s_ease-out] max-h-[90vh] flex flex-col">
                 <div class="flex justify-between items-center mb-4 border-b pb-2 shrink-0">
@@ -72,15 +68,19 @@
                     </div>
                 </div>
                 
-                <!-- Form Kasir: Catatan Dihapus, Nama Diperjelas -->
                 <div class="space-y-4 shrink-0 mt-3 border-t-2 border-stone-100 pt-4">
                     <div>
-                        <label class="block text-stone-800 font-extrabold text-base mb-2" for="nama-pemesan">Masukkan Nama Anda:</label>
-                        <input type="text" id="nama-pemesan" class="w-full border-2 border-stone-300 rounded-xl p-3 text-lg focus:border-[#d97706] outline-none font-bold placeholder-stone-400" placeholder="Ketik nama di sini...">
+                        <label class="block text-stone-800 font-extrabold text-base mb-2" for="nama-pemesan">Nama Pemesan:</label>
+                        <input type="text" id="nama-pemesan" class="w-full border-2 border-stone-300 rounded-xl p-3 text-lg focus:border-[#d97706] outline-none font-bold placeholder-stone-400" placeholder="Ketik nama...">
+                    </div>
+
+                    <div>
+                        <label class="block text-stone-700 font-bold text-sm mb-1" for="catatan-pesanan">Catatan (Opsional)</label>
+                        <textarea id="catatan-pesanan" rows="1" class="w-full border-2 border-stone-300 rounded-lg p-2 focus:border-[#d97706] outline-none font-medium" placeholder="Contoh: Es dipisah, antar ke pos..."></textarea>
                     </div>
                     
                     <div>
-                        <select id="metode-bayar" class="w-full border-2 border-stone-300 rounded-xl p-3 bg-stone-50 text-stone-700 font-bold outline-none focus:border-[#d97706]">
+                        <select id="metode-bayar" class="w-full border-2 border-stone-300 rounded-xl p-3 bg-stone-50 text-stone-700 font-bold outline-none">
                             <option value="COD">💵 Bayar di Tempat (COD)</option>
                         </select>
                     </div>
@@ -92,7 +92,6 @@
             </div>
         </div>
 
-        <!-- NAVIGASI BAWAH -->
         <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-stone-300 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)] z-40 flex justify-between items-center px-8 py-2 pb-safe">
             <button onclick="bukaCheckout()" class="flex flex-col items-center text-amber-800 hover:text-amber-600 transition relative">
                 <span class="text-2xl">🛒</span><span class="text-[10px] font-extrabold mt-1">Keranjang</span>
@@ -113,6 +112,10 @@
         const SUPABASE_KEY = 'sb_publishable_yO2CBmW5iJ8UKXw802hvXA_nAz3gr9X';
         const clientDB = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // DATA TELEGRAM
+        const TELE_TOKEN = '8854342299:AAF3dBZvDDItaPS08hhYI_-0Q4ccm-dKgPs';
+        const TELE_ID = '8498622906';
+
         let keranjang = JSON.parse(localStorage.getItem('keranjangWarungBasecamp')) || [];
         let totalHarga = 0;
         let semuaMenuDB = [];
@@ -125,9 +128,7 @@
                 if (index !== -1) {
                     riwayat[index].status = payload.new.status;
                     localStorage.setItem('riwayatWarungBasecamp', JSON.stringify(riwayat));
-                    if (!document.getElementById('halaman-riwayat').classList.contains('hidden')) {
-                        renderRiwayat(); 
-                    }
+                    if (!document.getElementById('halaman-riwayat').classList.contains('hidden')) { renderRiwayat(); }
                 }
             }).subscribe();
 
@@ -136,9 +137,7 @@
         function tampilkanNotifikasi(pesan, tipe = 'sukses') {
             const toast = document.getElementById('toast');
             const toastContent = document.getElementById('toast-content');
-            toastContent.className = tipe === 'sukses' 
-                ? 'px-6 py-3 rounded-full shadow-lg text-sm font-bold text-white flex items-center justify-center gap-2 bg-green-600 w-full'
-                : 'px-6 py-3 rounded-full shadow-lg text-sm font-bold text-white flex items-center justify-center gap-2 bg-red-500 w-full';
+            toastContent.className = tipe === 'sukses' ? 'px-6 py-3 rounded-full shadow-lg text-sm font-bold text-white flex items-center justify-center gap-2 bg-green-600 w-full' : 'px-6 py-3 rounded-full shadow-lg text-sm font-bold text-white flex items-center justify-center gap-2 bg-red-500 w-full';
             toastContent.innerHTML = `<span>${pesan}</span>`;
             toast.classList.remove('-translate-y-24', 'opacity-0');
             toast.classList.add('translate-y-0', 'opacity-100');
@@ -201,108 +200,97 @@
             const badge = document.getElementById('jumlah-item-bawah');
             const listArea = document.getElementById('daftar-pesanan-checkout');
             const teksTotal = document.getElementById('total-harga-checkout');
-
             if (keranjang.length === 0) {
                 badge.classList.add('hidden');
-                listArea.innerHTML = `<div class="text-center py-6 text-stone-400"><span class="text-4xl">🛒</span><p class="font-bold mt-2">Kosong</p></div>`;
+                listArea.innerHTML = `<div class="text-center py-6 text-stone-400">Kosong</div>`;
                 teksTotal.innerText = 'Rp 0';
                 return;
             }
-
             badge.classList.remove('hidden');
             let qty = 0; totalHarga = 0; let listHTML = '';
             keranjang.forEach(item => {
                 qty += item.jumlah; totalHarga += item.harga * item.jumlah;
-                const namaAman = item.nama.replace(/'/g, "\\'");
                 listHTML += `
                     <div class="flex justify-between items-center border-b border-stone-200 py-3 last:border-0">
-                        <div class="flex flex-col w-[55%]">
-                            <span class="font-bold text-stone-800 text-sm truncate">${item.nama}</span>
-                            <span class="text-[#d97706] text-xs font-bold">Rp ${(item.harga * item.jumlah).toLocaleString('id-ID')}</span>
-                        </div>
+                        <span class="text-sm font-bold w-1/2 truncate">${item.nama}</span>
                         <div class="flex gap-2">
-                            <button onclick="ubahJumlahItem('${namaAman}', -1)" class="bg-stone-200 w-7 h-7 rounded-full font-bold active:scale-95">-</button>
-                            <span class="font-bold text-sm w-5 text-center leading-7">${item.jumlah}</span>
-                            <button onclick="ubahJumlahItem('${namaAman}', 1)" class="bg-[#d97706] text-white w-7 h-7 rounded-full font-bold active:scale-95">+</button>
+                            <button onclick="ubahJumlahItem('${item.nama.replace(/'/g, "\\'")}', -1)" class="bg-stone-200 w-6 h-6 rounded-full font-bold">-</button>
+                            <span class="text-sm font-bold w-4 text-center">${item.jumlah}</span>
+                            <button onclick="ubahJumlahItem('${item.nama.replace(/'/g, "\\'")}', 1)" class="bg-[#d97706] text-white w-6 h-6 rounded-full font-bold">+</button>
                         </div>
                     </div>`;
             });
             badge.innerText = qty; listArea.innerHTML = listHTML; teksTotal.innerText = `Rp ${totalHarga.toLocaleString('id-ID')}`;
         }
 
-        function bukaBeranda() { document.getElementById('halaman-beranda').classList.remove('hidden'); document.getElementById('halaman-riwayat').classList.add('hidden'); tutupCheckout(); }
-        function bukaRiwayat() { document.getElementById('halaman-beranda').classList.add('hidden'); document.getElementById('halaman-riwayat').classList.remove('hidden'); tutupCheckout(); renderRiwayat(); }
-        function bukaCheckout() { document.getElementById('modal-checkout').classList.remove('hidden'); }
-        function tutupCheckout() { document.getElementById('modal-checkout').classList.add('hidden'); }
+        // FUNGSI KIRIM KE BOT TELEGRAM
+        async function kirimKeTelegram(nama, catatan, total, daftarItem) {
+            let detailPesanan = daftarItem.map(i => `• ${i.jumlah}x ${i.nama}`).join('%0A');
+            let pesan = `🔔 *PESANAN BARU MASUK!*%0A%0A` +
+                        `👤 *Nama:* ${nama}%0A` +
+                        `📝 *Catatan:* ${catatan}%0A%0A` +
+                        `🛍️ *Pesanan:*%0A${detailPesanan}%0A%0A` +
+                        `💰 *Total:* Rp ${total.toLocaleString('id-ID')}%0A%0A` +
+                        `🛵 *Segera Proses via Dashboard Admin!*`;
 
-        function renderRiwayat() {
-            const area = document.getElementById('daftar-riwayat');
-            let riwayat = JSON.parse(localStorage.getItem('riwayatWarungBasecamp')) || [];
-
-            if (riwayat.length === 0) {
-                area.innerHTML = `<div class="bg-white p-6 rounded-xl border border-stone-200 text-center"><span class="text-4xl mb-2 block">📍</span><p class="font-bold text-stone-500">Belum ada pesanan aktif.</p></div>`;
-                return;
-            }
-
-            let htmlRiwayat = '';
-            riwayat.forEach(pesanan => {
-                let statusUI = '';
-                if (!pesanan.status || pesanan.status === 'Pending') {
-                    statusUI = '<div class="bg-yellow-100 text-yellow-700 px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2 border border-yellow-200"><span class="animate-pulse text-xl">🕒</span> Menunggu Konfirmasi</div>';
-                } else if (pesanan.status === 'Diproses') {
-                    statusUI = '<div class="bg-blue-100 text-blue-700 px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2 border border-blue-200"><span class="animasi-seduh text-xl">👨‍🍳</span> Sedang Disiapkan / Diseduh</div>';
-                } else if (pesanan.status === 'Dikirim') {
-                    statusUI = '<div class="bg-orange-100 text-orange-700 px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2 border border-orange-200"><span class="animasi-jalan text-xl">🛵</span> Kurir Menuju Lokasi!</div>';
-                } else if (pesanan.status === 'Selesai') {
-                    statusUI = '<div class="bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2 border border-green-200"><span class="text-xl">🏠✅</span> Pesanan Telah Tiba</div>';
-                }
-
-                htmlRiwayat += `
-                    <div class="bg-white p-4 rounded-xl border border-stone-200 shadow-md">
-                        <div class="mb-3">${statusUI}</div>
-                        <p class="text-xs text-stone-400 mb-1">${pesanan.tanggal}</p>
-                        <p class="text-sm font-bold text-stone-800 mb-1">${pesanan.nama_pemesan}</p>
-                        <p class="text-xs text-stone-600 mb-3 line-clamp-2">${pesanan.detail_pesanan.map(i => `${i.jumlah}x ${i.nama}`).join(', ')}</p>
-                        <div class="flex justify-between items-center border-t border-stone-100 pt-2">
-                            <span class="text-xs font-bold text-stone-500">${pesanan.metode}</span>
-                            <span class="text-sm font-extrabold text-[#d97706]">Rp ${pesanan.total_harga.toLocaleString('id-ID')}</span>
-                        </div>
-                    </div>`;
-            });
-            area.innerHTML = htmlRiwayat;
+            const url = `https://api.telegram.org/bot${TELE_TOKEN}/sendMessage?chat_id=${TELE_ID}&text=${pesan}&parse_mode=Markdown`;
+            try { await fetch(url); } catch (e) { console.error("Gagal kirim Telegram"); }
         }
 
         async function kirimPesanan() {
             const nama = document.getElementById('nama-pemesan').value;
+            const catatan = document.getElementById('catatan-pesanan').value || "-";
             const btn = document.getElementById('btn-kirim');
-            
-            if (keranjang.length === 0 || !nama) return tampilkanNotifikasi("Nama & Keranjang wajib diisi!", "error");
-
+            if (keranjang.length === 0 || !nama) return tampilkanNotifikasi("Isi Nama & Keranjang!", "error");
             btn.innerText = "Memproses..."; btn.disabled = true;
 
             try {
                 const { data, error } = await clientDB.from('pesanan_warung').insert([{
-                    nama_pemesan: nama, alamat: "-", total_harga: totalHarga, detail_pesanan: keranjang, status: 'Pending'
+                    nama_pemesan: nama, alamat: catatan, total_harga: totalHarga, detail_pesanan: keranjang, status: 'Pending'
                 }]).select();
 
                 if (error) throw error;
 
+                // JALANKAN FUNGSI TELEGRAM
+                await kirimKeTelegram(nama, catatan, totalHarga, keranjang);
+
                 const orderId = data[0].id; 
                 let riwayat = JSON.parse(localStorage.getItem('riwayatWarungBasecamp')) || [];
                 riwayat.unshift({
-                    id: orderId, 
-                    status: 'Pending',
+                    id: orderId, status: 'Pending',
                     tanggal: new Date().toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
                     nama_pemesan: nama, total_harga: totalHarga, metode: 'COD', detail_pesanan: keranjang
                 });
                 localStorage.setItem('riwayatWarungBasecamp', JSON.stringify(riwayat));
                 
                 keranjang = []; simpanKeranjangLokal(); updateTampilanKeranjang(); tutupCheckout();
-                document.getElementById('nama-pemesan').value = ''; 
+                document.getElementById('nama-pemesan').value = ''; document.getElementById('catatan-pesanan').value = '';
                 setTimeout(() => { bukaRiwayat(); }, 500);
-
             } catch (err) { tampilkanNotifikasi("Gagal kirim!", "error"); } 
             finally { btn.innerText = "Kirim Pesanan"; btn.disabled = false; }
+        }
+
+        function bukaBeranda() { document.getElementById('halaman-beranda').classList.remove('hidden'); document.getElementById('halaman-riwayat').classList.add('hidden'); }
+        function bukaRiwayat() { document.getElementById('halaman-beranda').classList.add('hidden'); document.getElementById('halaman-riwayat').classList.remove('hidden'); renderRiwayat(); }
+        function bukaCheckout() { document.getElementById('modal-checkout').classList.remove('hidden'); }
+        function tutupCheckout() { document.getElementById('modal-checkout').classList.add('hidden'); }
+
+        function renderRiwayat() {
+            const area = document.getElementById('daftar-riwayat');
+            let riwayat = JSON.parse(localStorage.getItem('riwayatWarungBasecamp')) || [];
+            if (riwayat.length === 0) { area.innerHTML = `<div class="text-center py-10">Kosong</div>`; return; }
+            let html = '';
+            riwayat.forEach(p => {
+                let statusUI = p.status === 'Diproses' ? '👨‍🍳 Proses' : p.status === 'Dikirim' ? '🛵 Dikirim' : p.status === 'Selesai' ? '✅ Selesai' : '🕒 Pending';
+                html += `
+                    <div class="bg-white p-4 rounded-xl border border-stone-200 shadow-sm mb-3">
+                        <div class="font-bold text-[#d97706] mb-2">${statusUI}</div>
+                        <p class="text-sm font-bold">${p.nama_pemesan}</p>
+                        <p class="text-xs text-stone-400">${p.tanggal}</p>
+                        <div class="border-t mt-2 pt-2 text-xs font-bold">Total: Rp ${p.total_harga.toLocaleString('id-ID')}</div>
+                    </div>`;
+            });
+            area.innerHTML = html;
         }
 
         updateTampilanKeranjang(); ambilDataMenu();
