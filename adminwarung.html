@@ -7,8 +7,27 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-stone-900 font-sans text-stone-200 pb-10 min-h-screen">
+<body class="bg-stone-900 font-sans text-stone-200 pb-10 min-h-screen relative">
 
+    <!-- LAYAR KUNCI (USERNAME & PASSWORD) -->
+    <div id="layar-kunci" class="fixed inset-0 bg-stone-950 z-[100] flex flex-col justify-center items-center px-6">
+        <div class="bg-stone-900 p-8 rounded-2xl shadow-2xl border border-stone-700 w-full max-w-sm text-center">
+            <span class="text-5xl block mb-4">🔐</span>
+            <h1 class="text-2xl font-extrabold text-amber-500 mb-2">Login Admin</h1>
+            <p class="text-stone-400 text-sm mb-6">Silakan masukkan akses untuk mengelola pesanan Warung Basecamp Coffee.</p>
+            
+            <input type="text" id="input-username" class="w-full border-2 border-stone-700 bg-stone-800 rounded-xl p-3 text-lg text-white focus:border-amber-500 outline-none font-bold text-center mb-3" placeholder="Username">
+            
+            <input type="password" id="input-password" class="w-full border-2 border-stone-700 bg-stone-800 rounded-xl p-3 text-lg text-white focus:border-amber-500 outline-none font-bold text-center mb-4 tracking-widest" placeholder="Password">
+            
+            <button onclick="cekPassword()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-extrabold py-3 rounded-xl shadow-lg transition active:scale-95 text-lg">
+                Buka Brankas
+            </button>
+            <p id="pesan-error" class="text-red-500 mt-4 font-bold hidden animate-pulse">❌ Username atau Password Salah!</p>
+        </div>
+    </div>
+
+    <!-- KONTEN ADMIN (Akan tertutup layar kunci sampai login benar) -->
     <div class="max-w-2xl mx-auto p-4">
         
         <!-- Header Admin & Tombol Riset -->
@@ -28,6 +47,33 @@
     </div>
 
     <script>
+        // --- SISTEM LOGIN ---
+        function cekPassword() {
+            const inputUser = document.getElementById('input-username').value;
+            const inputPass = document.getElementById('input-password').value;
+            
+            // Pengaturan Akun Admin
+            const USERNAME_BENAR = "hendri1285";
+            const PASSWORD_BENAR = "1295326"; 
+
+            if (inputUser === USERNAME_BENAR && inputPass === PASSWORD_BENAR) {
+                // Jika benar, hilangkan layar kunci
+                document.getElementById('layar-kunci').classList.add('hidden');
+                // Simpan sesi sebentar biar tidak bolak-balik login saat refresh
+                sessionStorage.setItem('adminAkses', 'true'); 
+            } else {
+                // Jika salah, munculkan peringatan
+                const pesanErr = document.getElementById('pesan-error');
+                pesanErr.classList.remove('hidden');
+                setTimeout(() => pesanErr.classList.add('hidden'), 2000);
+            }
+        }
+
+        // Cek apakah admin sudah berhasil login sebelumnya di tab ini
+        if(sessionStorage.getItem('adminAkses') === 'true') {
+            document.getElementById('layar-kunci').classList.add('hidden');
+        }
+
         // KREDENSIAL SUPABASE
         const SUPABASE_URL = 'https://butydxuauhtvwojvpixt.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_yO2CBmW5iJ8UKXw802hvXA_nAz3gr9X';
@@ -49,7 +95,6 @@
             data.forEach(p => {
                 let items = p.detail_pesanan.map(i => `${i.jumlah}x ${i.nama}`).join(', ');
                 
-                // Mengatur warna latar berdasarkan status pesanan
                 let bgWarna = 'bg-stone-800 border-stone-600'; 
                 let iconStatus = '🕒';
                 
@@ -84,7 +129,7 @@
             wadah.innerHTML = html;
         }
 
-        // FUNGSI MENGUBAH STATUS (Otomatis update di HP Pelanggan)
+        // FUNGSI MENGUBAH STATUS
         async function ubahStatus(id, statusBaru) {
             const { error } = await clientDB.from('pesanan_warung').update({ status: statusBaru }).eq('id', id);
             if (error) {
@@ -110,16 +155,16 @@
             }
         }
 
-        // TAMPILKAN DATA SAAT WEB DIBUKA
+        // Jalankan saat layar admin terbuka
         ambilPesanan();
         
-        // FITUR OTOMATIS: Dengar jika ada pesanan baru masuk dari pelanggan
+        // Peringatan otomatis kalau ada pesanan masuk
         clientDB.channel('admin-tracker')
             .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pesanan_warung' }, payload => {
                 let audioTing = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg');
                 audioTing.play().catch(e => console.log("Browser memblokir suara otomatis"));
                 
-                alert("🔔 ADA PESANAN BARU MASUK!");
+                alert("🔔 ADA PESANAN BARU MASUK DARI WARGA!");
                 ambilPesanan();
             }).subscribe();
     </script>
