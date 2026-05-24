@@ -37,7 +37,7 @@
         
         <div class="bg-[#292524] text-amber-50 p-4 sticky top-0 z-10 shadow-md border-b-4 border-[#d97706]">
             <h1 class="text-xl font-extrabold text-center tracking-wide text-[#f59e0b] leading-snug">☕PINGIN NGOPI KARO UDUT TAPI MAGER</h1>
-            <p class="text-center text-sm text-stone-200 mt-1">warung kopi siap antar 🚶</p>
+            <p class="text-center text-sm text-stone-200 mt-1">warung kopi siap antar <span class="animasi-jalan">🚶</span></p>
         </div>
 
         <div class="p-4 bg-stone-50 min-h-screen" id="halaman-beranda">
@@ -101,9 +101,10 @@
                 <span class="text-2xl">🏠</span><span class="text-[10px] font-extrabold mt-1">Beranda</span>
             </button>
             <button onclick="bukaRiwayat()" class="flex flex-col items-center text-stone-500 hover:text-stone-800 transition relative">
-                <span class="text-2xl">🚶</span><span class="text-[10px] font-extrabold mt-1">Lacak</span>
+                <span class="text-2xl">📍</span><span class="text-[10px] font-extrabold mt-1">Lacak</span>
             </button>
         </div>
+
     </div>
 
     <script>
@@ -111,6 +112,7 @@
         const SUPABASE_KEY = 'sb_publishable_yO2CBmW5iJ8UKXw802hvXA_nAz3gr9X';
         const clientDB = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // DATA TELEGRAM
         const TELE_TOKEN = '8854342299:AAF3dBZvDDItaPS08hhYI_-0Q4ccm-dKgPs';
         const TELE_ID = '8498622906';
 
@@ -221,6 +223,7 @@
             badge.innerText = qty; listArea.innerHTML = listHTML; teksTotal.innerText = `Rp ${totalHarga.toLocaleString('id-ID')}`;
         }
 
+        // FUNGSI KIRIM KE BOT TELEGRAM
         async function kirimKeTelegram(nama, catatan, total, daftarItem) {
             let detailPesanan = daftarItem.map(i => `• ${i.jumlah}x ${i.nama}`).join('%0A');
             let pesan = `🔔 *PESANAN BARU MASUK!*%0A%0A` +
@@ -228,7 +231,7 @@
                         `📝 *Catatan:* ${catatan}%0A%0A` +
                         `🛍️ *Pesanan:*%0A${detailPesanan}%0A%0A` +
                         `💰 *Total:* Rp ${total.toLocaleString('id-ID')}%0A%0A` +
-                        `🚶 *Segera diantar jalan kaki via Dashboard Admin!*`;
+                        `🚶 *Segera Proses via Dashboard Admin!*`;
 
             const url = `https://api.telegram.org/bot${TELE_TOKEN}/sendMessage?chat_id=${TELE_ID}&text=${pesan}&parse_mode=Markdown`;
             try { await fetch(url); } catch (e) { console.error("Gagal kirim Telegram"); }
@@ -248,6 +251,7 @@
 
                 if (error) throw error;
 
+                // JALANKAN FUNGSI TELEGRAM
                 await kirimKeTelegram(nama, catatan, totalHarga, keranjang);
 
                 const orderId = data[0].id; 
@@ -277,7 +281,8 @@
             if (riwayat.length === 0) { area.innerHTML = `<div class="text-center py-10">Kosong</div>`; return; }
             let html = '';
             riwayat.forEach(p => {
-                let statusUI = p.status === 'Diproses' ? '👨‍🍳 Proses' : p.status === 'Dikirim' ? '🚶 Dikirim' : p.status === 'Selesai' ? '✅ Selesai' : '🕒 Pending';
+                // Di sini letak perubahannya: mengganti 🛵 menjadi 🚶 dan menyematkan animasi jalan saat statusnya 'Dikirim'
+                let statusUI = p.status === 'Diproses' ? '👨‍🍳 Proses' : p.status === 'Dikirim' ? '<span class="animasi-jalan">🚶</span> Dikirim' : p.status === 'Selesai' ? '✅ Selesai' : '🕒 Pending';
                 html += `
                     <div class="bg-white p-4 rounded-xl border border-stone-200 shadow-sm mb-3">
                         <div class="font-bold text-[#d97706] mb-2">${statusUI}</div>
