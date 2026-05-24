@@ -10,7 +10,6 @@
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* Animasi Koki Meracik/Seduh */
         @keyframes seduh {
             0% { transform: rotate(0deg); }
             25% { transform: rotate(15deg); }
@@ -20,7 +19,6 @@
         }
         .animasi-seduh { animation: seduh 0.8s infinite; display: inline-block; }
 
-        /* Animasi Kurir Jalan */
         @keyframes jalan {
             0% { transform: translateX(-15px); }
             50% { transform: translateX(15px); }
@@ -63,7 +61,8 @@
                     <h2 class="text-xl font-bold text-stone-800">Keranjang</h2>
                     <button onclick="tutupCheckout()" class="text-stone-400 hover:text-red-500 font-bold text-3xl">&times;</button>
                 </div>
-                <div class="overflow-y-auto hide-scroll mb-4 shrink">
+                
+                <div class="overflow-y-auto hide-scroll mb-2 shrink">
                     <div class="bg-stone-50 p-3 rounded-lg border border-stone-200">
                         <div id="daftar-pesanan-checkout" class="flex flex-col"></div>
                         <div class="flex justify-between items-center border-t border-stone-300 pt-3 mt-2">
@@ -72,13 +71,21 @@
                         </div>
                     </div>
                 </div>
-                <div class="space-y-3 shrink-0">
-                    <input type="text" id="nama-pemesan" class="w-full border-2 border-stone-300 rounded-lg p-2 focus:border-[#d97706] outline-none font-medium" placeholder="Nama Pemesan...">
-                    <textarea id="catatan-pesanan" rows="1" class="w-full border-2 border-stone-300 rounded-lg p-2 focus:border-[#d97706] outline-none font-medium" placeholder="Catatan (Es dipisah, dll)..."></textarea>
-                    <select id="metode-bayar" class="w-full border-2 border-stone-300 rounded-lg p-2 bg-stone-50 font-bold outline-none">
-                        <option value="COD">💵 Bayar di Tempat (COD)</option>
-                    </select>
-                    <button id="btn-kirim" onclick="kirimPesanan()" class="w-full bg-[#d97706] text-white font-bold py-3 mt-2 rounded-xl shadow-lg active:scale-95 transition">
+                
+                <!-- Form Kasir: Catatan Dihapus, Nama Diperjelas -->
+                <div class="space-y-4 shrink-0 mt-3 border-t-2 border-stone-100 pt-4">
+                    <div>
+                        <label class="block text-stone-800 font-extrabold text-base mb-2" for="nama-pemesan">Masukkan Nama Anda:</label>
+                        <input type="text" id="nama-pemesan" class="w-full border-2 border-stone-300 rounded-xl p-3 text-lg focus:border-[#d97706] outline-none font-bold placeholder-stone-400" placeholder="Ketik nama di sini...">
+                    </div>
+                    
+                    <div>
+                        <select id="metode-bayar" class="w-full border-2 border-stone-300 rounded-xl p-3 bg-stone-50 text-stone-700 font-bold outline-none focus:border-[#d97706]">
+                            <option value="COD">💵 Bayar di Tempat (COD)</option>
+                        </select>
+                    </div>
+                    
+                    <button id="btn-kirim" onclick="kirimPesanan()" class="w-full bg-[#d97706] text-white font-extrabold py-3.5 mt-2 rounded-xl shadow-lg active:scale-95 transition text-lg">
                         Kirim Pesanan
                     </button>
                 </div>
@@ -111,7 +118,6 @@
         let semuaMenuDB = [];
         let kategoriSaatIni = 'Semua';
 
-        // MENDENGARKAN PERUBAHAN STATUS REAL-TIME DARI ADMIN
         clientDB.channel('public:pesanan_warung')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pesanan_warung' }, payload => {
                 let riwayat = JSON.parse(localStorage.getItem('riwayatWarungBasecamp')) || [];
@@ -120,7 +126,7 @@
                     riwayat[index].status = payload.new.status;
                     localStorage.setItem('riwayatWarungBasecamp', JSON.stringify(riwayat));
                     if (!document.getElementById('halaman-riwayat').classList.contains('hidden')) {
-                        renderRiwayat(); // Render ulang jika sedang di halaman riwayat
+                        renderRiwayat(); 
                     }
                 }
             }).subscribe();
@@ -241,7 +247,6 @@
             let htmlRiwayat = '';
             riwayat.forEach(pesanan => {
                 let statusUI = '';
-                // LOGIKA ANIMASI STATUS
                 if (!pesanan.status || pesanan.status === 'Pending') {
                     statusUI = '<div class="bg-yellow-100 text-yellow-700 px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2 border border-yellow-200"><span class="animate-pulse text-xl">🕒</span> Menunggu Konfirmasi</div>';
                 } else if (pesanan.status === 'Diproses') {
@@ -269,24 +274,23 @@
 
         async function kirimPesanan() {
             const nama = document.getElementById('nama-pemesan').value;
-            const catatan = document.getElementById('catatan-pesanan').value || "-";
             const btn = document.getElementById('btn-kirim');
+            
             if (keranjang.length === 0 || !nama) return tampilkanNotifikasi("Nama & Keranjang wajib diisi!", "error");
 
             btn.innerText = "Memproses..."; btn.disabled = true;
 
             try {
-                // Meminta Supabase mengembalikan ID pesanan yang baru dibuat (.select())
                 const { data, error } = await clientDB.from('pesanan_warung').insert([{
-                    nama_pemesan: nama, alamat: catatan, total_harga: totalHarga, detail_pesanan: keranjang, status: 'Pending'
+                    nama_pemesan: nama, alamat: "-", total_harga: totalHarga, detail_pesanan: keranjang, status: 'Pending'
                 }]).select();
 
                 if (error) throw error;
 
-                const orderId = data[0].id; // Ambil ID aslinya
+                const orderId = data[0].id; 
                 let riwayat = JSON.parse(localStorage.getItem('riwayatWarungBasecamp')) || [];
                 riwayat.unshift({
-                    id: orderId, // Simpan ID agar bisa dilacak live
+                    id: orderId, 
                     status: 'Pending',
                     tanggal: new Date().toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
                     nama_pemesan: nama, total_harga: totalHarga, metode: 'COD', detail_pesanan: keranjang
@@ -294,7 +298,7 @@
                 localStorage.setItem('riwayatWarungBasecamp', JSON.stringify(riwayat));
                 
                 keranjang = []; simpanKeranjangLokal(); updateTampilanKeranjang(); tutupCheckout();
-                document.getElementById('nama-pemesan').value = ''; document.getElementById('catatan-pesanan').value = '';
+                document.getElementById('nama-pemesan').value = ''; 
                 setTimeout(() => { bukaRiwayat(); }, 500);
 
             } catch (err) { tampilkanNotifikasi("Gagal kirim!", "error"); } 
