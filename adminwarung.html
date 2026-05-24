@@ -9,164 +9,110 @@
 </head>
 <body class="bg-stone-900 font-sans text-stone-200 pb-10 min-h-screen relative">
 
-    <!-- LAYAR KUNCI (USERNAME & PASSWORD) -->
+    <!-- LAYAR KUNCI (LOGIN) -->
     <div id="layar-kunci" class="fixed inset-0 bg-stone-950 z-[100] flex flex-col justify-center items-center px-6">
         <div class="bg-stone-900 p-8 rounded-2xl shadow-2xl border border-stone-700 w-full max-w-sm text-center">
             <span class="text-5xl block mb-4">🔐</span>
             <h1 class="text-2xl font-extrabold text-amber-500 mb-2">Login Admin</h1>
-            <p class="text-stone-400 text-sm mb-6">Silakan masukkan akses untuk mengelola pesanan Warung Basecamp Coffee.</p>
+            <p class="text-stone-400 text-sm mb-6">Akses kontrol pesanan Warung Basecamp Coffee.</p>
             
             <input type="text" id="input-username" class="w-full border-2 border-stone-700 bg-stone-800 rounded-xl p-3 text-lg text-white focus:border-amber-500 outline-none font-bold text-center mb-3" placeholder="Username">
-            
-            <input type="password" id="input-password" class="w-full border-2 border-stone-700 bg-stone-800 rounded-xl p-3 text-lg text-white focus:border-amber-500 outline-none font-bold text-center mb-4 tracking-widest" placeholder="Password">
+            <input type="password" id="input-password" class="w-full border-2 border-stone-700 bg-stone-800 rounded-xl p-3 text-lg text-white focus:border-amber-500 outline-none font-bold text-center mb-4" placeholder="Password">
             
             <button onclick="cekPassword()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-extrabold py-3 rounded-xl shadow-lg transition active:scale-95 text-lg">
                 Buka Brankas
             </button>
-            <p id="pesan-error" class="text-red-500 mt-4 font-bold hidden animate-pulse">❌ Username atau Password Salah!</p>
+            <p id="pesan-error" class="text-red-500 mt-4 font-bold hidden animate-pulse">❌ Login Gagal!</p>
         </div>
     </div>
 
-    <!-- KONTEN ADMIN (Akan tertutup layar kunci sampai login benar) -->
+    <!-- KONTEN ADMIN -->
     <div class="max-w-2xl mx-auto p-4">
-        
-        <!-- Header Admin & Tombol Riset -->
         <div class="flex flex-col sm:flex-row justify-between items-center bg-stone-800 p-4 rounded-xl shadow-lg border border-stone-700 mb-6 gap-4 sticky top-4 z-10">
-            <h1 class="text-xl sm:text-2xl font-bold text-amber-500">🛠️ Dashboard Admin Warung</h1>
-            
-            <button onclick="risetSemuaPesanan()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
-                <span class="text-lg">🗑️</span> RISET PESANAN
-            </button>
+            <h1 class="text-xl sm:text-2xl font-bold text-amber-500">🛠️ Admin Order</h1>
+            <div class="flex gap-2 w-full sm:w-auto">
+                <button onclick="logoutAdmin()" class="flex-1 sm:flex-none bg-stone-700 hover:bg-stone-600 text-white font-bold py-2 px-4 rounded-lg shadow transition">Keluar</button>
+                <button onclick="risetSemuaPesanan()" class="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow transition">🗑️ Riset</button>
+            </div>
         </div>
 
-        <!-- Tempat Daftar Pesanan Muncul -->
         <div id="list-pesanan" class="space-y-4">
-            <p class="text-stone-400 animate-pulse text-center mt-10">Mengambil data pesanan masuk...</p>
+            <p class="text-stone-400 animate-pulse text-center mt-10">Mengambil data...</p>
         </div>
-
     </div>
 
     <script>
-        // --- SISTEM LOGIN ---
-        function cekPassword() {
-            const inputUser = document.getElementById('input-username').value;
-            const inputPass = document.getElementById('input-password').value;
-            
-            // Pengaturan Akun Admin
-            const USERNAME_BENAR = "hendri1285";
-            const PASSWORD_BENAR = "1295326"; 
-
-            if (inputUser === USERNAME_BENAR && inputPass === PASSWORD_BENAR) {
-                // Jika benar, hilangkan layar kunci
-                document.getElementById('layar-kunci').classList.add('hidden');
-                // Simpan sesi sebentar biar tidak bolak-balik login saat refresh
-                sessionStorage.setItem('adminAkses', 'true'); 
-            } else {
-                // Jika salah, munculkan peringatan
-                const pesanErr = document.getElementById('pesan-error');
-                pesanErr.classList.remove('hidden');
-                setTimeout(() => pesanErr.classList.add('hidden'), 2000);
-            }
-        }
-
-        // Cek apakah admin sudah berhasil login sebelumnya di tab ini
-        if(sessionStorage.getItem('adminAkses') === 'true') {
-            document.getElementById('layar-kunci').classList.add('hidden');
-        }
-
-        // KREDENSIAL SUPABASE
         const SUPABASE_URL = 'https://butydxuauhtvwojvpixt.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_yO2CBmW5iJ8UKXw802hvXA_nAz3gr9X';
         const clientDB = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // FUNGSI MENGAMBIL DATA PESANAN
-        async function ambilPesanan() {
-            const { data, error } = await clientDB.from('pesanan_warung')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(30);
+        // --- SISTEM LOGIN PERSISTENT ---
+        function cekPassword() {
+            const user = document.getElementById('input-username').value;
+            const pass = document.getElementById('input-password').value;
+            if (user === "hendri1285" && pass === "1295326") {
+                localStorage.setItem('adminAkses', 'true'); 
+                document.getElementById('layar-kunci').classList.add('hidden');
+                ambilPesanan();
+            } else {
+                const err = document.getElementById('pesan-error');
+                err.classList.remove('hidden');
+                setTimeout(() => err.classList.add('hidden'), 2000);
+            }
+        }
 
+        function logoutAdmin() {
+            localStorage.removeItem('adminAkses');
+            location.reload();
+        }
+
+        if(localStorage.getItem('adminAkses') === 'true') {
+            document.getElementById('layar-kunci').classList.add('hidden');
+        }
+
+        // --- FUNGSI DATA ---
+        async function ambilPesanan() {
+            const { data } = await clientDB.from('pesanan_warung').select('*').order('created_at', { ascending: false }).limit(30);
             const wadah = document.getElementById('list-pesanan');
-            
-            if (error) { wadah.innerHTML = `<p class="text-red-500 text-center font-bold">Error database: ${error.message}</p>`; return; }
-            if (data.length === 0) { wadah.innerHTML = `<div class="text-center py-10"><span class="text-5xl block mb-3">📭</span><p class="text-stone-500 font-bold text-lg">Belum ada pesanan masuk / Layar sudah di-Riset.</p></div>`; return; }
+            if (!data || data.length === 0) { wadah.innerHTML = `<p class="text-center text-stone-500">Belum ada pesanan.</p>`; return; }
 
             let html = '';
             data.forEach(p => {
                 let items = p.detail_pesanan.map(i => `${i.jumlah}x ${i.nama}`).join(', ');
+                let bg = p.status === 'Diproses' ? 'bg-blue-950 border-blue-600' : p.status === 'Dikirim' ? 'bg-orange-950 border-orange-600' : p.status === 'Selesai' ? 'bg-green-950 border-green-600 opacity-60' : 'bg-stone-800 border-stone-600';
                 
-                let bgWarna = 'bg-stone-800 border-stone-600'; 
-                let iconStatus = '🕒';
-                
-                if (p.status === 'Diproses') { bgWarna = 'bg-blue-950 border-blue-600'; iconStatus = '👨‍🍳'; }
-                else if (p.status === 'Dikirim') { bgWarna = 'bg-orange-950 border-orange-600'; iconStatus = '🛵'; }
-                else if (p.status === 'Selesai') { bgWarna = 'bg-green-950 border-green-600 opacity-60'; iconStatus = '✅'; }
-
                 html += `
-                    <div class="${bgWarna} border-2 p-4 rounded-xl shadow-lg transition-all">
-                        <div class="flex justify-between items-start border-b border-white/10 pb-2 mb-2">
-                            <div>
-                                <h2 class="font-bold text-lg text-amber-400">${p.nama_pemesan}</h2>
-                                <span class="text-xs font-bold bg-white/10 px-2 py-0.5 rounded text-white mt-1 inline-block">${iconStatus} ${p.status || 'Pending'}</span>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-extrabold text-white text-lg">Rp ${p.total_harga.toLocaleString('id-ID')}</p>
-                                <p class="text-[10px] text-stone-400">${new Date(p.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</p>
-                            </div>
+                    <div class="${bg} border-2 p-4 rounded-xl shadow-lg">
+                        <div class="flex justify-between border-b border-white/10 pb-2 mb-2">
+                            <div><h2 class="font-bold text-lg text-amber-400">${p.nama_pemesan}</h2><span class="text-xs font-bold bg-white/10 px-2 rounded text-white">${p.status || 'Pending'}</span></div>
+                            <p class="font-extrabold text-white">Rp ${p.total_harga.toLocaleString('id-ID')}</p>
                         </div>
-                        
-                        <p class="text-sm mb-3 text-stone-200">📝 <span class="font-bold text-amber-100">${items}</span></p>
-                        
-                        <!-- Tombol Aksi Admin -->
-                        <div class="flex gap-2 mt-4">
-                            <button onclick="ubahStatus('${p.id}', 'Diproses')" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-bold text-xs sm:text-sm transition active:scale-95 shadow-md">👨‍🍳 Proses</button>
-                            <button onclick="ubahStatus('${p.id}', 'Dikirim')" class="flex-1 bg-orange-600 hover:bg-orange-500 text-white py-2 rounded-lg font-bold text-xs sm:text-sm transition active:scale-95 shadow-md">🛵 Kirim</button>
-                            <button onclick="ubahStatus('${p.id}', 'Selesai')" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-bold text-xs sm:text-sm transition active:scale-95 shadow-md">✅ Selesai</button>
+                        <p class="text-sm text-stone-200 mb-3 font-bold">${items}</p>
+                        <div class="flex gap-2">
+                            <button onclick="ubahStatus('${p.id}', 'Diproses')" class="flex-1 bg-blue-600 py-2 rounded font-bold text-xs">👨‍🍳 Proses</button>
+                            <button onclick="ubahStatus('${p.id}', 'Dikirim')" class="flex-1 bg-orange-600 py-2 rounded font-bold text-xs">🛵 Kirim</button>
+                            <button onclick="ubahStatus('${p.id}', 'Selesai')" class="flex-1 bg-green-600 py-2 rounded font-bold text-xs">✅ Selesai</button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
             });
             wadah.innerHTML = html;
         }
 
-        // FUNGSI MENGUBAH STATUS
-        async function ubahStatus(id, statusBaru) {
-            const { error } = await clientDB.from('pesanan_warung').update({ status: statusBaru }).eq('id', id);
-            if (error) {
-                alert("Gagal mengubah status!");
-            } else {
-                ambilPesanan(); 
-            }
-        }
+        async function ubahStatus(id, stat) { await clientDB.from('pesanan_warung').update({ status: stat }).eq('id', id); ambilPesanan(); }
 
-        // FUNGSI RISET (HAPUS SEMUA DATA)
         async function risetSemuaPesanan() {
-            const konfirmasi = confirm("⚠️ PERINGATAN!\n\nApakah kamu yakin ingin MERISET (menghapus) semua pesanan di layar ini?\nData tidak bisa dikembalikan setelah dihapus.");
-            
-            if (konfirmasi) {
-                const { error } = await clientDB.from('pesanan_warung').delete().gte('total_harga', 0);
-                
-                if (error) {
-                    alert("Gagal meriset data: " + error.message);
-                } else {
-                    alert("Berhasil! Semua pesanan telah dibersihkan.");
-                    ambilPesanan(); 
-                }
+            if (confirm("Hapus semua pesanan?")) {
+                await clientDB.from('pesanan_warung').delete().gte('total_harga', 0);
+                ambilPesanan();
             }
         }
 
-        // Jalankan saat layar admin terbuka
-        ambilPesanan();
+        if(localStorage.getItem('adminAkses') === 'true') ambilPesanan();
         
-        // Peringatan otomatis kalau ada pesanan masuk
-        clientDB.channel('admin-tracker')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pesanan_warung' }, payload => {
-                let audioTing = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg');
-                audioTing.play().catch(e => console.log("Browser memblokir suara otomatis"));
-                
-                alert("🔔 ADA PESANAN BARU MASUK DARI WARGA!");
-                ambilPesanan();
-            }).subscribe();
+        clientDB.channel('admin-tracker').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pesanan_warung' }, () => {
+            new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg').play();
+            ambilPesanan();
+        }).subscribe();
     </script>
 </body>
 </html>
