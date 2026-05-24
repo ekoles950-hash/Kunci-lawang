@@ -1,129 +1,97 @@
+<?php
+// Mulai sesi kerahasiaan
+session_start();
+
+// --- KREDENSIAL ADMIN ---
+$username_admin = "admin hendri1285";
+$password_admin = "1295326";
+
+// LOGIKA LOGOUT
+if (isset($_GET['keluar'])) {
+    session_destroy();
+    header("Location: admin.php"); // Refresh halaman biar terkunci lagi
+    exit;
+}
+
+// LOGIKA LOGIN
+$pesan_error = "";
+if (isset($_POST['tombol_login'])) {
+    $input_user = $_POST['username'];
+    $input_pass = $_POST['password'];
+
+    // Cek kecocokan nama dan password
+    if ($input_user === $username_admin && $input_pass === $password_admin) {
+        $_SESSION['kunci_admin'] = "terbuka";
+        header("Location: admin.php"); // Refresh halaman masuk ke dalam
+        exit;
+    } else {
+        $pesan_error = "❌ Nama atau Password Salah!";
+    }
+}
+
+// CEK STATUS GEMBOK (Apakah sudah login?)
+$sudah_login = isset($_SESSION['kunci_admin']) && $_SESSION['kunci_admin'] === "terbuka";
+?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Warung Basecamp</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>PORTAL ADMIN</title>
+    <style>
+        body { background: #050505; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
+        .kotak-login { background: #111; border: 2px solid cyan; border-radius: 10px; padding: 25px; max-width: 320px; margin: 50px auto; box-shadow: 0 0 15px cyan; }
+        input { width: 90%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid cyan; color: cyan; border-radius: 5px; font-size: 14px; }
+        button { width: 98%; background: cyan; color: #000; font-weight: bold; padding: 12px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; font-size: 16px; box-shadow: 0 0 10px cyan; }
+        .panel-admin { border: 2px solid #0f0; padding: 20px; border-radius: 10px; margin-top: 20px; text-align: left; background: #0a110a; box-shadow: 0 0 15px #0f0;}
+        .btn-keluar { display: inline-block; background: red; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-weight: bold; margin-top: 20px; }
+    </style>
 </head>
-<body class="bg-stone-900 font-sans text-stone-200 pb-10 min-h-screen">
+<body>
 
-    <div class="max-w-2xl mx-auto p-4">
+<?php if (!$sudah_login): ?>
+
+    <!-- ========================================== -->
+    <!-- TAMPILAN DEPAN: GEMBOK (BELUM LOGIN) -->
+    <!-- ========================================== -->
+    <div class="kotak-login">
+        <h2 style="color: cyan; margin-top: 0;">🔐 KAWASAN TERBATAS</h2>
+        <p style="font-size: 12px; color: #aaa;">Silakan login untuk mengakses data transaksi.</p>
         
-        <!-- Header Admin & Tombol Riset -->
-        <div class="flex flex-col sm:flex-row justify-between items-center bg-stone-800 p-4 rounded-xl shadow-lg border border-stone-700 mb-6 gap-4 sticky top-4 z-10">
-            <h1 class="text-xl sm:text-2xl font-bold text-amber-500">🛠️ Dashboard Admin</h1>
-            
-            <button onclick="risetSemuaPesanan()" class="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-lg flex items-center justify-center gap-2 transition active:scale-95">
-                <span class="text-lg">🗑️</span> RISET PESANAN
-            </button>
-        </div>
-
-        <!-- Tempat Daftar Pesanan Muncul -->
-        <div id="list-pesanan" class="space-y-4">
-            <p class="text-stone-400 animate-pulse text-center mt-10">Mengambil data pesanan masuk...</p>
-        </div>
-
+        <?php if($pesan_error != "") echo "<div style='color:black; background:yellow; padding:8px; border-radius:5px; font-weight:bold; font-size:12px; margin-bottom:10px;'>$pesan_error</div>"; ?>
+        
+        <form method="POST">
+            <input type="text" name="username" placeholder="Nama..." required>
+            <input type="password" name="password" placeholder="Password..." required>
+            <button type="submit" name="tombol_login">🚀 BUKA BRANKAS</button>
+        </form>
     </div>
 
-    <script>
-        // KREDENSIAL SUPABASE
-        const SUPABASE_URL = 'https://butydxuauhtvwojvpixt.supabase.co'; 
-        const SUPABASE_KEY = 'sb_publishable_yO2CBmW5iJ8UKXw802hvXA_nAz3gr9X';
-        const clientDB = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+<?php else: ?>
 
-        // FUNGSI MENGAMBIL DATA PESANAN
-        async function ambilPesanan() {
-            const { data, error } = await clientDB.from('pesanan_warung')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(30); // Menampilkan 30 pesanan terakhir
-
-            const wadah = document.getElementById('list-pesanan');
-            
-            if (error) { wadah.innerHTML = `<p class="text-red-500 text-center font-bold">Error database: ${error.message}</p>`; return; }
-            if (data.length === 0) { wadah.innerHTML = `<div class="text-center py-10"><span class="text-5xl block mb-3">📭</span><p class="text-stone-500 font-bold text-lg">Belum ada pesanan masuk / Layar sudah di-Riset.</p></div>`; return; }
-
-            let html = '';
-            data.forEach(p => {
-                let items = p.detail_pesanan.map(i => `${i.jumlah}x ${i.nama}`).join(', ');
-                
-                // Mengatur warna latar (background) berdasarkan status pesanan
-                let bgWarna = 'bg-stone-800 border-stone-600'; // Default (Pending)
-                let iconStatus = '🕒';
-                
-                if (p.status === 'Diproses') { bgWarna = 'bg-blue-950 border-blue-600'; iconStatus = '👨‍🍳'; }
-                else if (p.status === 'Dikirim') { bgWarna = 'bg-orange-950 border-orange-600'; iconStatus = '🛵'; }
-                else if (p.status === 'Selesai') { bgWarna = 'bg-green-950 border-green-600 opacity-60'; iconStatus = '✅'; }
-
-                html += `
-                    <div class="${bgWarna} border-2 p-4 rounded-xl shadow-lg transition-all">
-                        <div class="flex justify-between items-start border-b border-white/10 pb-2 mb-2">
-                            <div>
-                                <h2 class="font-bold text-lg text-amber-400">${p.nama_pemesan}</h2>
-                                <span class="text-xs font-bold bg-white/10 px-2 py-0.5 rounded text-white mt-1 inline-block">${iconStatus} ${p.status || 'Pending'}</span>
-                            </div>
-                            <div class="text-right">
-                                <p class="font-extrabold text-white text-lg">Rp ${p.total_harga.toLocaleString('id-ID')}</p>
-                                <p class="text-[10px] text-stone-400">${new Date(p.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}</p>
-                            </div>
-                        </div>
-                        
-                        <p class="text-sm mb-3 text-stone-200">📝 <span class="font-bold text-amber-100">${items}</span></p>
-                        
-                        <!-- Tombol Aksi Admin -->
-                        <div class="flex gap-2 mt-4">
-                            <button onclick="ubahStatus('${p.id}', 'Diproses')" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-bold text-xs sm:text-sm transition active:scale-95 shadow-md">👨‍🍳 Proses</button>
-                            <button onclick="ubahStatus('${p.id}', 'Dikirim')" class="flex-1 bg-orange-600 hover:bg-orange-500 text-white py-2 rounded-lg font-bold text-xs sm:text-sm transition active:scale-95 shadow-md">🛵 Kirim</button>
-                            <button onclick="ubahStatus('${p.id}', 'Selesai')" class="flex-1 bg-green-600 hover:bg-green-500 text-white py-2 rounded-lg font-bold text-xs sm:text-sm transition active:scale-95 shadow-md">✅ Selesai</button>
-                        </div>
-                    </div>
-                `;
-            });
-            wadah.innerHTML = html;
-        }
-
-        // FUNGSI MENGUBAH STATUS (Otomatis update di HP Pelanggan)
-        async function ubahStatus(id, statusBaru) {
-            const { error } = await clientDB.from('pesanan_warung').update({ status: statusBaru }).eq('id', id);
-            if (error) {
-                alert("Gagal mengubah status!");
-            } else {
-                ambilPesanan(); // Segarkan layar admin
-            }
-        }
-
-        // FUNGSI RISET (HAPUS SEMUA DATA)
-        async function risetSemuaPesanan() {
-            const konfirmasi = confirm("⚠️ PERINGATAN!\n\nApakah kamu yakin ingin MERISET (menghapus) semua pesanan di layar ini?\nData tidak bisa dikembalikan setelah dihapus.");
-            
-            if (konfirmasi) {
-                // Trik menghapus seluruh data di Supabase (menghapus semua harga yang >= 0)
-                const { error } = await clientDB.from('pesanan_warung').delete().gte('total_harga', 0);
-                
-                if (error) {
-                    alert("Gagal meriset data: " + error.message);
-                } else {
-                    alert("Berhasil! Semua pesanan telah dibersihkan.");
-                    ambilPesanan(); // Segarkan layar jadi kosong
-                }
-            }
-        }
-
-        // TAMPILKAN DATA SAAT WEB DIBUKA
-        ambilPesanan();
+    <!-- ========================================== -->
+    <!-- TAMPILAN DALAM: BRANKAS ADMIN (SUDAH LOGIN)-->
+    <!-- ========================================== -->
+    <h2 style="color: #0f0;">👋 Akses Diterima!</h2>
+    
+    <div class="panel-admin">
+        <h3 style="color: yellow; border-bottom: 1px solid #333; padding-bottom: 10px;">📊 DASHBOARD TRANSAKSI TRIPAY</h3>
         
-        // FITUR OTOMATIS: Dengar jika ada pesanan baru masuk dari pelanggan
-        clientDB.channel('admin-tracker')
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'pesanan_warung' }, payload => {
-                // Mainkan suara notifikasi saat ada pesanan masuk
-                let audioTing = new Audio('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg');
-                audioTing.play().catch(e => console.log("Browser memblokir suara otomatis"));
-                
-                alert("🔔 ADA PESANAN BARU MASUK!");
-                ambilPesanan();
-            }).subscribe();
-    </script>
+        <p style="font-size: 14px; color: #ccc;">Ini adalah area rahasia. Tempatkan kode HTML dari Tripay atau BukaOlshop di bawah kotak hijau ini.</p>
+        
+        <!-- TEMPEL KODE HTML/IFRAME TRANSAKSI TRIPAY JENENGAN DI BAWAH INI -->
+        <div style="background: #000; padding: 20px; border: 1px dashed #0f0; text-align: center; color: #555;">
+            <i>[ KODE HTML BUKAOLSHOP / TRIPAY BERADA DI SINI NANTI ]</i>
+        </div>
+        <!-- BATAS KODE TRANSAKSI -->
+
+        <div style="text-align: center;">
+            <a href="?keluar=true" class="btn-keluar">🛑 KUNCI & KELUAR</a>
+        </div>
+    </div>
+
+<?php endif; ?>
+
 </body>
 </html>
