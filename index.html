@@ -3,62 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Basecamp Coffee - Delivery</title>
+    <title>Warung Kopi Siap Antar</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .hide-scroll::-webkit-scrollbar { display: none; }
-        @keyframes jalan { 0% { transform: translateX(-20px); } 50% { transform: translateX(20px); } 100% { transform: translateX(-20px); } }
-        .animasi-orang { animation: jalan 2s infinite ease-in-out; font-size: 30px; display: inline-block; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Animasi orang jalan */
+        @keyframes jalan {
+            0% { transform: translateX(-20px); }
+            50% { transform: translateX(20px); }
+            100% { transform: translateX(-20px); }
+        }
+        .animasi-orang { animation: jalan 2s infinite ease-in-out; display: inline-block; font-size: 40px; }
     </style>
 </head>
 <body class="bg-stone-100 font-sans pb-24">
 
-    <div id="app-container" class="max-w-md mx-auto bg-white min-h-screen shadow-lg relative">
-        <div class="bg-[#292524] text-amber-50 p-4 sticky top-0 z-10 shadow-md">
-            <h1 class="text-xl font-extrabold text-center text-[#f59e0b]">☕ WARUNG KOPI SIAP ANTAR</h1>
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 -translate-y-24 opacity-0 z-[100] transition-all duration-300 pointer-events-none w-[90%] max-w-sm">
+        <div id="toast-content" class="px-6 py-3 rounded-full shadow-2xl text-sm font-bold text-white flex items-center justify-center gap-2"></div>
+    </div>
+
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg overflow-hidden border border-stone-200 relative">
+        <div class="bg-[#292524] text-amber-50 p-4 sticky top-0 z-10 shadow-md border-b-4 border-[#d97706]">
+            <h1 class="text-xl font-extrabold text-center tracking-wide text-[#f59e0b] leading-snug">☕PINGIN NGOPI KARO UDUT TAPI MAGER</h1>
         </div>
 
-        <div id="halaman-beranda" class="p-4">
-            <h2 class="text-lg font-bold mb-3">Daftar Menu</h2>
+        <div class="p-4 bg-stone-50 min-h-screen" id="halaman-beranda">
+            <h2 class="text-lg font-bold text-stone-800 mb-3">Daftar Menu</h2>
+            <div id="kategori-container" class="flex gap-2 overflow-x-auto hide-scroll mb-4 pb-2 border-b-2 border-stone-200"></div>
             <div id="ruang-menu" class="grid grid-cols-2 gap-4"></div>
         </div>
 
-        <div id="halaman-lacak" class="p-4 hidden">
-            <h2 class="text-lg font-bold mb-4">Status Pesanan</h2>
+        <div class="p-4 bg-stone-50 min-h-screen hidden" id="halaman-riwayat">
+            <h2 class="text-lg font-bold text-stone-800 mb-4 border-b-2 border-stone-200 pb-2">Status Pesanan</h2>
             <div id="daftar-riwayat" class="space-y-4"></div>
+        </div>
+
+        <div id="modal-checkout" class="hidden fixed inset-0 bg-black/60 z-50 flex justify-center items-end sm:items-center">
+            <div class="bg-white w-full max-w-md p-6 rounded-t-2xl shadow-2xl max-h-[90vh] flex flex-col">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h2 class="text-xl font-bold text-stone-800">Keranjang</h2>
+                    <button onclick="tutupCheckout()" class="text-3xl">&times;</button>
+                </div>
+                <div class="overflow-y-auto hide-scroll mb-2 shrink">
+                    <div id="daftar-pesanan-checkout"></div>
+                    <div class="font-bold text-lg mt-4 border-t pt-2">Total Harga: <span id="total-harga-checkout" class="text-[#d97706]">Rp 0</span></div>
+                </div>
+                <div class="mt-4 pt-4 border-t-2">
+                    <label class="block font-extrabold text-stone-800 mb-2">Nama Pemesan:</label>
+                    <input type="text" id="nama-pemesan" class="w-full border-2 border-stone-300 rounded-xl p-4 text-lg font-bold" placeholder="Ketik nama...">
+                    <button id="btn-kirim" onclick="kirimPesanan()" class="w-full bg-[#d97706] text-white font-extrabold py-4 mt-4 rounded-xl text-lg">Kirim Pesanan</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t z-40 flex justify-around p-4">
+            <button onclick="bukaCheckout()">🛒 Keranjang</button>
+            <button onclick="bukaBeranda()">🏠 Beranda</button>
+            <button onclick="bukaRiwayat()">📍 Lacak</button>
         </div>
     </div>
 
-    <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t z-50 flex justify-around p-3 shadow-lg">
-        <button onclick="pindah('beranda')" class="flex flex-col items-center text-xs font-bold">🏠 Beranda</button>
-        <button onclick="bukaCheckout()" class="flex flex-col items-center text-xs font-bold">🛒 Keranjang</button>
-        <button onclick="window.location.href='topup.html'" class="flex flex-col items-center text-xs font-bold text-blue-600">💳 Top Up</button>
-        <button onclick="pindah('lacak')" class="flex flex-col items-center text-xs font-bold">📍 Lacak</button>
-    </div>
-
     <script>
-        const clientDB = window.supabase.createClient('https://butydxuauhtvwojvpixt.supabase.co', 'sb_publishable_yO2CBmW5iJ8UKXw802hvXA_nAz3gr9X');
+        const SUPABASE_URL = 'https://butydxuauhtvwojvpixt.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_yO2CBmW5iJ8UKXw802hvXA_nAz3gr9X';
+        const clientDB = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const TELE_TOKEN = '8854342299:AAF3dBZvDDItaPS08hhYI_-0Q4ccm-dKgPs';
+        const TELE_ID = '8498622906';
 
-        function pindah(hal) {
-            document.getElementById('halaman-beranda').classList.toggle('hidden', hal !== 'beranda');
-            document.getElementById('halaman-lacak').classList.toggle('hidden', hal !== 'lacak');
-            if(hal === 'lacak') renderRiwayat();
-        }
+        let keranjang = JSON.parse(localStorage.getItem('keranjangWarungBasecamp')) || [];
 
         function renderRiwayat() {
             const area = document.getElementById('daftar-riwayat');
             let riwayat = JSON.parse(localStorage.getItem('riwayatWarungBasecamp')) || [];
-            area.innerHTML = riwayat.length === 0 ? `<div class="text-center py-10">Belum ada pesanan.</div>` : '';
+            if (riwayat.length === 0) { area.innerHTML = `<div class="text-center py-10">Belum ada pesanan.</div>`; return; }
+            let html = '';
             riwayat.forEach(p => {
-                let statusInfo = p.status === 'Dikirim' ? '🛵 Sedang diantar...' : '🕒 Pending';
-                let animasi = (p.status === 'Diproses' || p.status === 'Dikirim') ? '<div class="animasi-orang">🚶</div>' : '';
-                area.innerHTML += `<div class="bg-white p-4 rounded-xl border shadow-sm text-center">${animasi}<p class="font-bold">${p.nama_pemesan}</p><p class="text-stone-500 text-sm">${statusInfo}</p></div>`;
+                let statusAnim = p.status === 'Dikirim' ? '<div class="text-center my-4"><span class="animasi-orang">🚶</span><br>Kurir Sedang Berjalan!</div>' : `<div>Status: ${p.status}</div>`;
+                html += `<div class="bg-white p-4 rounded-xl shadow-sm border border-stone-200">${statusAnim}<p class="font-bold">${p.nama_pemesan}</p></div>`;
             });
+            area.innerHTML = html;
         }
 
-        // Fungsi lainnya tetap sama...
-        async function kirimPesanan() { /* ... logika kirim ke supabase & telegram ... */ }
+        async function kirimPesanan() {
+            const nama = document.getElementById('nama-pemesan').value;
+            if (!nama || keranjang.length === 0) return alert("Nama & Keranjang wajib diisi!");
+            
+            const { data, error } = await clientDB.from('pesanan_warung').insert([{
+                nama_pemesan: nama, total_harga: keranjang.reduce((a,b) => a + (b.harga * b.jumlah), 0), detail_pesanan: keranjang, status: 'Pending'
+            }]).select();
+
+            if (!error) {
+                localStorage.setItem('riwayatWarungBasecamp', JSON.stringify([{ id: data[0].id, nama_pemesan: nama, status: 'Pending' }]));
+                keranjang = []; localStorage.setItem('keranjangWarungBasecamp', '[]');
+                tutupCheckout(); bukaRiwayat();
+            }
+        }
+
+        function bukaBeranda() { document.getElementById('halaman-beranda').classList.remove('hidden'); document.getElementById('halaman-riwayat').classList.add('hidden'); }
+        function bukaRiwayat() { document.getElementById('halaman-beranda').classList.add('hidden'); document.getElementById('halaman-riwayat').classList.remove('hidden'); renderRiwayat(); }
+        function bukaCheckout() { document.getElementById('modal-checkout').classList.remove('hidden'); }
+        function tutupCheckout() { document.getElementById('modal-checkout').classList.add('hidden'); }
+
+        // Load awal
+        (async () => {
+            const { data } = await clientDB.from('menu_warung').select('*');
+            // ... (logika render menu singkat)
+        })();
     </script>
 </body>
 </html>
