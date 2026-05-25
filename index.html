@@ -10,21 +10,20 @@
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         
-        @keyframes seduh {
-            0% { transform: rotate(0deg); }
-            25% { transform: rotate(15deg); }
-            50% { transform: rotate(0deg); }
-            75% { transform: rotate(-15deg); }
-            100% { transform: rotate(0deg); }
+        @keyframes jalan-maju {
+            0% { transform: translateX(-10px) scaleX(-1); }
+            50% { transform: translateX(10px) scaleX(-1); }
+            100% { transform: translateX(-10px) scaleX(-1); }
         }
-        .animasi-seduh { animation: seduh 0.8s infinite; display: inline-block; }
+        .animasi-jalan-maju { animation: jalan-maju 1.5s infinite ease-in-out; display: inline-block; }
 
-        @keyframes jalan {
-            0% { transform: translateX(-15px); }
-            50% { transform: translateX(15px); }
-            100% { transform: translateX(-15px); }
+        @keyframes lompat-jalan {
+            0%, 100% { transform: translateY(0) scaleX(-1); }
+            50% { transform: translateY(-8px) scaleX(-1); }
         }
-        .animasi-jalan { animation: jalan 1.5s infinite ease-in-out; display: inline-block; }
+        .animasi-kurir-jalan { animation: lompat-jalan 0.6s infinite; }
+        
+        .kurir-diam { transform: scaleX(-1); }
     </style>
 </head>
 <body class="bg-stone-100 font-sans pb-24">
@@ -35,9 +34,9 @@
 
     <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg overflow-hidden border border-stone-200 relative">
         
-        <div class="bg-[#292524] text-amber-50 p-4 sticky top-0 z-10 shadow-md border-b-4 border-[#d97706]">
+        <div class="bg-[#292524] text-amber-50 p-4 sticky top-0 z-10 shadow-md border-b-4 border-[#d97706]" id="header-utama">
             <h1 class="text-xl font-extrabold text-center tracking-wide text-[#f59e0b] leading-snug">☕PINGIN NGOPI KARO UDUT TAPI MAGER</h1>
-            <p class="text-center text-sm text-stone-200 mt-1">warung kopi siap antar🛵</p>
+            <p class="text-center text-sm text-stone-200 mt-1">warung kopi siap antar <span class="animasi-jalan-maju">🚶</span></p>
         </div>
 
         <div class="p-4 bg-stone-50 min-h-screen" id="halaman-beranda">
@@ -46,9 +45,50 @@
             <div id="ruang-menu" class="grid grid-cols-2 gap-4"></div>
         </div>
 
-        <div class="p-4 bg-stone-50 min-h-screen hidden" id="halaman-riwayat">
-            <h2 class="text-lg font-bold text-stone-800 mb-4 border-b-2 border-stone-200 pb-2">Status Pesanan Anda</h2>
-            <div id="daftar-riwayat" class="space-y-4"></div>
+        <div class="min-h-screen bg-[#131722] text-white p-5 flex-col items-center pt-8 pb-24 hidden" id="halaman-lacak-visual">
+            <h3 class="text-[#22c55e] font-extrabold text-xs tracking-[0.2em] mb-3 text-center">LIVE TRACKING</h3>
+            <h1 id="teks-status-lacak" class="text-2xl font-extrabold italic text-white mb-10 text-center tracking-wide">MENCARI PESANAN...</h1>
+
+            <div class="bg-[#1e2536] w-full rounded-[2rem] p-6 relative h-64 shadow-2xl border border-gray-700/50 mb-8">
+                <svg class="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none" viewBox="0 0 100 100">
+                    <path d="M 20,75 C 40,75 50,25 80,25" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="3 3" stroke-linecap="round"/>
+                </svg>
+                
+                <div class="absolute bottom-[10%] left-[8%] flex flex-col items-center z-10">
+                    <div class="text-4xl bg-[#1e2536] rounded-full p-2 mb-1 border-b-[3px] border-blue-400">🏪</div>
+                    <span class="text-[10px] text-gray-500 font-bold tracking-wider">WARUNG</span>
+                </div>
+                
+                <div class="absolute top-[8%] right-[8%] flex flex-col items-center z-10">
+                    <div class="text-4xl bg-[#1e2536] rounded-full p-2 mb-1 border-b-[3px] border-orange-400">🏠</div>
+                    <span class="text-[10px] text-gray-500 font-bold tracking-wider">RUMAH</span>
+                </div>
+                
+                <div id="ikon-kurir" class="absolute text-5xl transition-all duration-1000 ease-in-out z-20 kurir-diam" style="left: 10%; top: 55%;">
+                    🚶
+                </div>
+            </div>
+
+            <div class="bg-[#1e2536] rounded-2xl w-full p-5 text-center italic text-gray-400 text-sm font-medium border border-gray-800">
+                <span id="pesan-motivasi">"Mohon tunggu ya, pesananmu sedang diproses!"</span>
+            </div>
+
+            <button onclick="bukaBeranda()" class="mt-6 bg-[#161b28] border border-gray-700 w-full py-4 rounded-xl font-extrabold text-sm text-gray-300 hover:text-white hover:bg-gray-800 transition shadow-lg tracking-wide">
+                KEMBALI KE MENU
+            </button>
+        </div>
+
+        <div id="modal-lacak" class="hidden fixed inset-0 bg-black/80 z-50 flex justify-center items-center p-5">
+            <div class="bg-[#242b3d] w-full max-w-sm rounded-[2rem] p-6 shadow-2xl border border-gray-700 relative animate-[slideUp_0.2s_ease-out]">
+                <button onclick="tutupModalLacak()" class="absolute top-5 right-6 text-gray-400 hover:text-white text-2xl font-light">&times;</button>
+                <h2 class="text-white font-extrabold italic text-lg mb-6 tracking-wide mt-2">LACAK PESANAN</h2>
+                
+                <input type="text" id="input-nama-lacak" class="w-full bg-[#1b2130] border border-gray-600 rounded-2xl p-4 text-white placeholder-gray-500 outline-none focus:border-[#22c55e] mb-6 font-bold text-sm transition" placeholder="Ketik Nama Pembeli...">
+                
+                <button id="btn-cari-lacak" onclick="cariPesanan()" class="w-full bg-[#22c55e] text-white font-extrabold py-4 rounded-xl shadow-[0_4px_20px_rgba(34,197,94,0.3)] active:scale-95 transition tracking-wider text-sm">
+                    CARI
+                </button>
+            </div>
         </div>
 
         <div id="modal-checkout" class="hidden fixed inset-0 bg-black/60 z-50 flex justify-center items-end sm:items-center">
@@ -73,11 +113,6 @@
                         <label class="block text-stone-800 font-extrabold text-base mb-2" for="nama-pemesan">Nama Pemesan:</label>
                         <input type="text" id="nama-pemesan" class="w-full border-2 border-stone-300 rounded-xl p-3 text-lg focus:border-[#d97706] outline-none font-bold placeholder-stone-400" placeholder="Ketik nama...">
                     </div>
-
-                    <div>
-                        <label class="block text-stone-700 font-bold text-sm mb-1" for="catatan-pesanan">Catatan (Opsional)</label>
-                        <textarea id="catatan-pesanan" rows="1" class="w-full border-2 border-stone-300 rounded-lg p-2 focus:border-[#d97706] outline-none font-medium" placeholder="Contoh: Es dipisah, antar ke pos..."></textarea>
-                    </div>
                     
                     <div>
                         <select id="metode-bayar" class="w-full border-2 border-stone-300 rounded-xl p-3 bg-stone-50 text-stone-700 font-bold outline-none">
@@ -92,16 +127,16 @@
             </div>
         </div>
 
-        <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-stone-300 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)] z-40 flex justify-between items-center px-8 py-2 pb-safe">
-            <button onclick="bukaCheckout()" class="flex flex-col items-center text-amber-800 hover:text-amber-600 transition relative">
-                <span class="text-2xl">🛒</span><span class="text-[10px] font-extrabold mt-1">Keranjang</span>
-                <span id="jumlah-item-bawah" class="absolute -top-1 -right-2 bg-red-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm hidden">0</span>
+        <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-[#1a1f2e] border-t border-gray-800 shadow-[0_-10px_20px_-5px_rgba(0,0,0,0.5)] z-40 flex justify-between items-center px-10 py-3 pb-safe rounded-t-3xl" id="nav-bawah">
+            <button onclick="bukaModalLacak()" class="flex flex-col items-center text-gray-400 hover:text-white transition relative">
+                <span class="text-2xl">🔍</span><span class="text-[10px] font-extrabold mt-1 tracking-wide">LACAK</span>
             </button>
-            <button onclick="bukaBeranda()" class="flex flex-col items-center text-stone-800 hover:text-amber-600 transition">
-                <span class="text-2xl">🏠</span><span class="text-[10px] font-extrabold mt-1">Beranda</span>
+            <button onclick="bukaCheckout()" class="flex flex-col items-center text-gray-400 hover:text-white transition relative">
+                <span class="text-2xl">🛒</span><span class="text-[10px] font-extrabold mt-1 tracking-wide">KERANJANG</span>
+                <span id="jumlah-item-bawah" class="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm hidden">0</span>
             </button>
-            <button onclick="bukaRiwayat()" class="flex flex-col items-center text-stone-500 hover:text-stone-800 transition relative">
-                <span class="text-2xl">📍</span><span class="text-[10px] font-extrabold mt-1">Lacak</span>
+            <button onclick="bukaBeranda()" class="flex flex-col items-center text-[#22c55e] hover:text-green-400 transition relative bg-[#1f2937] p-3 rounded-2xl -mt-8 shadow-lg border border-gray-700">
+                <span class="text-3xl">🏠</span><span class="text-[10px] font-extrabold mt-1 tracking-wide text-white">BERANDA</span>
             </button>
         </div>
 
@@ -120,15 +155,36 @@
         let totalHarga = 0;
         let semuaMenuDB = [];
         let kategoriSaatIni = 'Semua';
+        let pesananAktif = null;
 
+        // Listener Real-time Supabase (Termasuk untuk Delete)
         clientDB.channel('public:pesanan_warung')
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pesanan_warung' }, payload => {
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'pesanan_warung' }, payload => {
                 let riwayat = JSON.parse(localStorage.getItem('riwayatWarungBasecamp')) || [];
-                let index = riwayat.findIndex(r => r.id === payload.new.id);
-                if (index !== -1) {
-                    riwayat[index].status = payload.new.status;
-                    localStorage.setItem('riwayatWarungBasecamp', JSON.stringify(riwayat));
-                    if (!document.getElementById('halaman-riwayat').classList.contains('hidden')) { renderRiwayat(); }
+                
+                if (payload.eventType === 'UPDATE') {
+                    let index = riwayat.findIndex(r => r.id === payload.new.id);
+                    if (index !== -1) {
+                        riwayat[index].status = payload.new.status;
+                        localStorage.setItem('riwayatWarungBasecamp', JSON.stringify(riwayat));
+                    }
+                    if (pesananAktif && pesananAktif.id === payload.new.id && !document.getElementById('halaman-lacak-visual').classList.contains('hidden')) {
+                        pesananAktif.status = payload.new.status;
+                        perbaruiVisualLacak();
+                    }
+                } 
+                else if (payload.eventType === 'DELETE') {
+                    // Hapus dari riwayat lokal jika admin mendelete
+                    let index = riwayat.findIndex(r => r.id === payload.old.id);
+                    if (index !== -1) {
+                        riwayat.splice(index, 1);
+                        localStorage.setItem('riwayatWarungBasecamp', JSON.stringify(riwayat));
+                    }
+                    // Jika pembeli kebetulan sedang melacak pesanan yang baru saja dihapus admin
+                    if (pesananAktif && pesananAktif.id === payload.old.id && !document.getElementById('halaman-lacak-visual').classList.contains('hidden')) {
+                        tampilkanNotifikasi("Pesanan ini telah dihapus/direset oleh Admin.", "error");
+                        setTimeout(() => { bukaBeranda(); }, 2500);
+                    }
                 }
             }).subscribe();
 
@@ -137,7 +193,7 @@
         function tampilkanNotifikasi(pesan, tipe = 'sukses') {
             const toast = document.getElementById('toast');
             const toastContent = document.getElementById('toast-content');
-            toastContent.className = tipe === 'sukses' ? 'px-6 py-3 rounded-full shadow-lg text-sm font-bold text-white flex items-center justify-center gap-2 bg-green-600 w-full' : 'px-6 py-3 rounded-full shadow-lg text-sm font-bold text-white flex items-center justify-center gap-2 bg-red-500 w-full';
+            toastContent.className = tipe === 'sukses' ? 'px-6 py-3 rounded-full shadow-lg text-sm font-bold text-white flex items-center justify-center gap-2 bg-green-500 w-full' : 'px-6 py-3 rounded-full shadow-lg text-sm font-bold text-white flex items-center justify-center gap-2 bg-red-500 w-full';
             toastContent.innerHTML = `<span>${pesan}</span>`;
             toast.classList.remove('-translate-y-24', 'opacity-0');
             toast.classList.add('translate-y-0', 'opacity-100');
@@ -223,15 +279,13 @@
             badge.innerText = qty; listArea.innerHTML = listHTML; teksTotal.innerText = `Rp ${totalHarga.toLocaleString('id-ID')}`;
         }
 
-        // FUNGSI KIRIM KE BOT TELEGRAM
-        async function kirimKeTelegram(nama, catatan, total, daftarItem) {
+        async function kirimKeTelegram(nama, total, daftarItem) {
             let detailPesanan = daftarItem.map(i => `• ${i.jumlah}x ${i.nama}`).join('%0A');
             let pesan = `🔔 *PESANAN BARU MASUK!*%0A%0A` +
                         `👤 *Nama:* ${nama}%0A` +
-                        `📝 *Catatan:* ${catatan}%0A%0A` +
                         `🛍️ *Pesanan:*%0A${detailPesanan}%0A%0A` +
                         `💰 *Total:* Rp ${total.toLocaleString('id-ID')}%0A%0A` +
-                        `🛵 *Segera Proses via Dashboard Admin!*`;
+                        `🚶 *Segera Proses via Dashboard Admin!*`;
 
             const url = `https://api.telegram.org/bot${TELE_TOKEN}/sendMessage?chat_id=${TELE_ID}&text=${pesan}&parse_mode=Markdown`;
             try { await fetch(url); } catch (e) { console.error("Gagal kirim Telegram"); }
@@ -239,58 +293,153 @@
 
         async function kirimPesanan() {
             const nama = document.getElementById('nama-pemesan').value;
-            const catatan = document.getElementById('catatan-pesanan').value || "-";
             const btn = document.getElementById('btn-kirim');
+            
             if (keranjang.length === 0 || !nama) return tampilkanNotifikasi("Isi Nama & Keranjang!", "error");
             btn.innerText = "Memproses..."; btn.disabled = true;
 
             try {
                 const { data, error } = await clientDB.from('pesanan_warung').insert([{
-                    nama_pemesan: nama, alamat: catatan, total_harga: totalHarga, detail_pesanan: keranjang, status: 'Pending'
+                    nama_pemesan: nama, alamat: "-", total_harga: totalHarga, detail_pesanan: keranjang, status: 'Pending'
                 }]).select();
 
                 if (error) throw error;
 
-                // JALANKAN FUNGSI TELEGRAM
-                await kirimKeTelegram(nama, catatan, totalHarga, keranjang);
+                await kirimKeTelegram(nama, totalHarga, keranjang);
 
                 const orderId = data[0].id; 
                 let riwayat = JSON.parse(localStorage.getItem('riwayatWarungBasecamp')) || [];
-                riwayat.unshift({
+                
+                const pesananBaru = {
                     id: orderId, status: 'Pending',
                     tanggal: new Date().toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
                     nama_pemesan: nama, total_harga: totalHarga, metode: 'COD', detail_pesanan: keranjang
-                });
+                };
+                
+                riwayat.unshift(pesananBaru);
                 localStorage.setItem('riwayatWarungBasecamp', JSON.stringify(riwayat));
                 
                 keranjang = []; simpanKeranjangLokal(); updateTampilanKeranjang(); tutupCheckout();
-                document.getElementById('nama-pemesan').value = ''; document.getElementById('catatan-pesanan').value = '';
-                setTimeout(() => { bukaRiwayat(); }, 500);
+                document.getElementById('nama-pemesan').value = ''; 
+                
+                tampilkanNotifikasi("Pesanan Berhasil Dibuat!");
+                
+                setTimeout(() => { 
+                    pesananAktif = pesananBaru;
+                    bukaLacakVisual(); 
+                }, 1000);
+
             } catch (err) { tampilkanNotifikasi("Gagal kirim!", "error"); } 
             finally { btn.innerText = "Kirim Pesanan"; btn.disabled = false; }
         }
 
-        function bukaBeranda() { document.getElementById('halaman-beranda').classList.remove('hidden'); document.getElementById('halaman-riwayat').classList.add('hidden'); }
-        function bukaRiwayat() { document.getElementById('halaman-beranda').classList.add('hidden'); document.getElementById('halaman-riwayat').classList.remove('hidden'); renderRiwayat(); }
+        // KONTROL NAVIGASI
+        function bukaBeranda() { 
+            document.getElementById('halaman-beranda').classList.remove('hidden'); 
+            document.getElementById('header-utama').classList.remove('hidden');
+            document.getElementById('halaman-lacak-visual').classList.add('hidden'); 
+        }
         function bukaCheckout() { document.getElementById('modal-checkout').classList.remove('hidden'); }
         function tutupCheckout() { document.getElementById('modal-checkout').classList.add('hidden'); }
+        
+        // KONTROL FITUR LACAK
+        function bukaModalLacak() { 
+            document.getElementById('modal-lacak').classList.remove('hidden'); 
+            document.getElementById('input-nama-lacak').focus();
+        }
+        function tutupModalLacak() { 
+            document.getElementById('modal-lacak').classList.add('hidden'); 
+            document.getElementById('input-nama-lacak').value = '';
+        }
 
-        function renderRiwayat() {
-            const area = document.getElementById('daftar-riwayat');
-            let riwayat = JSON.parse(localStorage.getItem('riwayatWarungBasecamp')) || [];
-            if (riwayat.length === 0) { area.innerHTML = `<div class="text-center py-10">Kosong</div>`; return; }
-            let html = '';
-            riwayat.forEach(p => {
-                let statusUI = p.status === 'Diproses' ? '👨‍🍳 Proses' : p.status === 'Dikirim' ? '🛵 Dikirim' : p.status === 'Selesai' ? '✅ Selesai' : '🕒 Pending';
-                html += `
-                    <div class="bg-white p-4 rounded-xl border border-stone-200 shadow-sm mb-3">
-                        <div class="font-bold text-[#d97706] mb-2">${statusUI}</div>
-                        <p class="text-sm font-bold">${p.nama_pemesan}</p>
-                        <p class="text-xs text-stone-400">${p.tanggal}</p>
-                        <div class="border-t mt-2 pt-2 text-xs font-bold">Total: Rp ${p.total_harga.toLocaleString('id-ID')}</div>
-                    </div>`;
-            });
-            area.innerHTML = html;
+        // MENCARI DATA LANGSUNG KE SUPABASE
+        async function cariPesanan() {
+            const namaCari = document.getElementById('input-nama-lacak').value.trim();
+            if (!namaCari) return tampilkanNotifikasi("Masukkan nama terlebih dahulu!", "error");
+
+            const btn = document.getElementById('btn-cari-lacak');
+            btn.innerText = "MENCARI..."; 
+            btn.disabled = true;
+
+            try {
+                // Query ke Supabase mencari nama yang cocok (ilike = tidak peduli huruf besar/kecil), ambil pesanan terbaru
+                const { data, error } = await clientDB
+                    .from('pesanan_warung')
+                    .select('*')
+                    .ilike('nama_pemesan', namaCari)
+                    .order('id', { ascending: false })
+                    .limit(1);
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    pesananAktif = data[0];
+                    tutupModalLacak();
+                    bukaLacakVisual();
+                    tampilkanNotifikasi("Pesanan ditemukan!");
+                } else {
+                    tampilkanNotifikasi("Pesanan tidak ditemukan/sudah dihapus admin!", "error");
+                }
+            } catch (err) { 
+                tampilkanNotifikasi("Gagal mencari data!", "error"); 
+                console.error(err);
+            } finally { 
+                btn.innerText = "CARI"; 
+                btn.disabled = false; 
+            }
+        }
+
+        function bukaLacakVisual() {
+            document.getElementById('halaman-beranda').classList.add('hidden');
+            document.getElementById('header-utama').classList.add('hidden'); 
+            document.getElementById('halaman-lacak-visual').classList.remove('hidden');
+            document.getElementById('halaman-lacak-visual').classList.add('flex');
+            
+            perbaruiVisualLacak();
+        }
+
+        function perbaruiVisualLacak() {
+            if (!pesananAktif) return;
+
+            const teksStatus = document.getElementById('teks-status-lacak');
+            const ikonKurir = document.getElementById('ikon-kurir');
+            const pesanMotivasi = document.getElementById('pesan-motivasi');
+
+            ikonKurir.className = 'absolute text-5xl transition-all duration-1000 ease-in-out z-20';
+
+            switch (pesananAktif.status) {
+                case 'Pending':
+                    teksStatus.innerText = "MENUNGGU KONFIRMASI";
+                    ikonKurir.style.left = "10%";
+                    ikonKurir.style.top = "55%";
+                    ikonKurir.classList.add('kurir-diam');
+                    pesanMotivasi.innerText = '"Mohon tunggu ya, warung sedang mengecek pesananmu!"';
+                    break;
+                case 'Diproses':
+                    teksStatus.innerText = "SEDANG DISIAPKAN";
+                    ikonKurir.style.left = "10%";
+                    ikonKurir.style.top = "55%";
+                    ikonKurir.classList.add('animasi-kurir-jalan');
+                    pesanMotivasi.innerText = '"Mantap! Kopi dan udutmu sedang disiapkan!"';
+                    break;
+                case 'Dikirim':
+                    teksStatus.innerText = "SEDANG DIANTAR";
+                    ikonKurir.style.left = "45%";
+                    ikonKurir.style.top = "35%";
+                    ikonKurir.classList.add('animasi-kurir-jalan');
+                    pesanMotivasi.innerText = '"Siap-siap! Kurir berjalan menuju lokasimu 🏃‍♂️💨"';
+                    break;
+                case 'Selesai':
+                    teksStatus.innerText = "PESANAN TIBA";
+                    ikonKurir.style.left = "75%";
+                    ikonKurir.style.top = "15%";
+                    ikonKurir.classList.add('kurir-diam');
+                    pesanMotivasi.innerText = '"Pesanan sudah sampai. Selamat ngopi dan udut! ☕🚬"';
+                    break;
+                default:
+                    teksStatus.innerText = "MEMUAT...";
+                    break;
+            }
         }
 
         updateTampilanKeranjang(); ambilDataMenu();
