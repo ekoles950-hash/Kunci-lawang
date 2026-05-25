@@ -502,7 +502,7 @@
             container.innerHTML = '';
             let daftarNominal = [];
             for (let i = 1000; i <= 10000; i += 1000) { daftarNominal.push({ nominal: i, harga: i + 2000 }); }
-            for (let i = 15000; i <= 100000; i += 5000) { daftarNominal.push({ nominal: i, harga: i + 2000 }); }
+            for (let i = 15000; i <= 100000; i += 5000) { daftarNominal.push({ nominal: i, harga: i + 5000 }); }
 
             daftarNominal.forEach(item => {
                 const sku = `${idCode}${item.nominal / 1000}`;
