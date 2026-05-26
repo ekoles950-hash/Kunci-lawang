@@ -26,6 +26,12 @@
         }
         .animasi-kurir-jalan { animation: lompat-jalan 0.6s infinite; }
         .kurir-diam { transform: scaleX(-1); }
+        
+        /* Animasi Pop Up */
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
 
         /* Style Khusus Menu Top Up */
         .input-dark { background-color: #1E293B; border: 1px solid #334155; color: white; transition: 0.3s; }
@@ -44,9 +50,10 @@
 
     <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg overflow-hidden border border-stone-200 relative">
         
-        <div class="bg-[#292524] text-amber-50 p-4 sticky top-0 z-10 shadow-md border-b-4 border-[#d97706]" id="header-utama">
+        <div class="bg-[#292524] text-amber-50 p-4 sticky top-0 z-10 shadow-md border-b-4 border-[#d97706] relative" id="header-utama">
             <h1 class="text-xl font-extrabold text-center tracking-wide text-[#f59e0b] leading-snug">☕PINGIN NGOPI KARO UDUT TAPI MAGER</h1>
             <p class="text-center text-sm text-stone-200 mt-1">warung kopi siap antar <span class="animasi-jalan-maju">🚶</span></p>
+            <button onclick="bukaModalAdmin()" class="absolute right-4 top-1/2 -translate-y-1/2 text-xl opacity-60 hover:opacity-100 transition duration-300">⚙️</button>
         </div>
 
         <div class="p-4 bg-stone-50 min-h-screen" id="halaman-beranda">
@@ -204,6 +211,47 @@
                 <span id="jumlah-item-bawah" class="absolute -top-1 right-0 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm hidden">0</span>
             </button>
         </div>
+        
+        <div id="modal-success-topup" class="hidden fixed inset-0 bg-black/80 z-[100] flex justify-center items-center p-5 backdrop-blur-sm">
+            <div class="bg-[#1E293B] w-full max-w-sm rounded-[2rem] p-8 shadow-2xl border border-blue-500/50 text-center animate-[slideUp_0.3s_ease-out]">
+                <div class="w-24 h-24 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-5 border-2 border-blue-400">
+                    <span class="text-5xl">🛵</span>
+                </div>
+                <h2 class="text-white font-black text-2xl mb-3 tracking-wide">TOP UP COD BERHASIL!</h2>
+                <div class="bg-slate-800 p-4 rounded-xl mb-6 border border-slate-700">
+                    <p class="text-slate-300 text-sm font-medium leading-relaxed">
+                        Sediakan uang kes untuk pembayaran karena admin sedang menuju ke lokasi <span class="text-yellow-400 font-bold italic">jikot dowet</span>.
+                    </p>
+                </div>
+                <button onclick="tutupModalSuccessTopup()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-4 rounded-xl shadow-[0_4px_20px_rgba(37,99,235,0.4)] active:scale-95 transition tracking-wider text-sm uppercase">
+                    SIAP, MANTAP!
+                </button>
+            </div>
+        </div>
+
+        <div id="modal-toko-tutup" class="hidden fixed inset-0 bg-black/80 z-[100] flex justify-center items-center p-5 backdrop-blur-sm">
+            <div class="bg-red-600 w-full max-w-sm rounded-[2rem] p-8 shadow-2xl text-center border-4 border-red-800 animate-[slideUp_0.3s_ease-out]">
+                <span class="text-6xl block mb-4">⛔</span>
+                <h2 class="text-white font-black text-2xl mb-2">MOHON MAAF</h2>
+                <p class="text-red-100 font-bold text-base mb-8">WARUNG DAN TOP UP SEDANG TUTUP</p>
+                <button onclick="tutupModalTokoTutup()" class="bg-white text-red-600 hover:bg-red-50 font-black py-4 px-8 rounded-xl w-full active:scale-95 transition tracking-wider">KEMBALI</button>
+            </div>
+        </div>
+
+        <div id="modal-admin-status" class="hidden fixed inset-0 bg-black/80 z-[100] flex justify-center items-center p-5">
+            <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl text-center animate-[slideUp_0.2s_ease-out]">
+                <h2 class="text-stone-800 font-extrabold text-xl mb-6">Pengaturan Warung ⚙️</h2>
+                <div class="flex justify-between items-center bg-stone-100 p-5 rounded-xl mb-6 border border-stone-200">
+                    <span class="font-extrabold text-green-600 text-lg" id="label-status-warung">Status: BUKA</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" id="toggle-buka-tutup" class="sr-only peer" checked onchange="ubahStatusWarung()">
+                      <div class="w-14 h-7 bg-red-500 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+                    </label>
+                </div>
+                <button onclick="tutupModalAdmin()" class="w-full bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-3.5 rounded-xl transition">Tutup Pengaturan</button>
+                <p class="text-[10px] text-stone-400 mt-4 italic">*Buat tabel "pengaturan_warung" di Supabase (kolom status_buka) agar sinkron ke semua HP pembeli.</p>
+            </div>
+        </div>
 
     </div>
 
@@ -229,6 +277,51 @@
 
         // VARIABEL TOP UP
         let providerTerpilih = ''; let skuCodeTerpilih = ''; let namaProdukTerpilih = ''; let hargaJualTerpilih = 0;
+        
+        // VARIABEL STATUS WARUNG (BUKA/TUTUP)
+        let isWarungBuka = true;
+
+        // ================= KONTROL STATUS WARUNG =================
+        async function cekStatusWarungDB() {
+            try {
+                // Mencoba mengambil data dari tabel 'pengaturan_warung' id 1. 
+                // Jika error (karena tabel belum dibuat), akan diabaikan dan pakai default lokal (buka).
+                const { data, error } = await clientDB.from('pengaturan_warung').select('status_buka').eq('id', 1).single();
+                if (data !== null) {
+                    isWarungBuka = data.status_buka;
+                    document.getElementById('toggle-buka-tutup').checked = isWarungBuka;
+                    perbaruiLabelStatus();
+                }
+            } catch (e) { console.log("Tabel pengaturan_warung belum ada."); }
+        }
+
+        function bukaModalAdmin() { document.getElementById('modal-admin-status').classList.remove('hidden'); }
+        function tutupModalAdmin() { document.getElementById('modal-admin-status').classList.add('hidden'); }
+        function tutupModalTokoTutup() { document.getElementById('modal-toko-tutup').classList.add('hidden'); }
+        function tutupModalSuccessTopup() { 
+            document.getElementById('modal-success-topup').classList.add('hidden'); 
+            bukaTopUp(); // Refresh halaman topup
+        }
+
+        async function ubahStatusWarung() {
+            isWarungBuka = document.getElementById('toggle-buka-tutup').checked;
+            perbaruiLabelStatus();
+            try {
+                // Coba update ke Supabase agar sinkron global (pastikan tabel dibuat)
+                await clientDB.from('pengaturan_warung').update({ status_buka: isWarungBuka }).eq('id', 1);
+            } catch (e) {}
+        }
+
+        function perbaruiLabelStatus() {
+            const label = document.getElementById('label-status-warung');
+            if (isWarungBuka) {
+                label.innerText = "Status: BUKA";
+                label.className = "font-extrabold text-green-600 text-lg";
+            } else {
+                label.innerText = "Status: TUTUP";
+                label.className = "font-extrabold text-red-600 text-lg";
+            }
+        }
 
         // ================= KONTROL NOTIFIKASI & NAVIGASI =================
         function tampilkanNotifikasi(pesan, tipe = 'sukses') {
@@ -301,6 +394,12 @@
                  if (!document.getElementById('halaman-topup').classList.contains('hidden')) {
                      loadRiwayatLive();
                  }
+            })
+            // Realtime Buka/Tutup Warung
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'pengaturan_warung' }, payload => {
+                 isWarungBuka = payload.new.status_buka;
+                 document.getElementById('toggle-buka-tutup').checked = isWarungBuka;
+                 perbaruiLabelStatus();
             }).subscribe();
 
 
@@ -390,6 +489,12 @@
         function tutupCheckout() { document.getElementById('modal-checkout').classList.add('hidden'); }
 
         async function kirimPesananKopi() {
+            // CEK STATUS WARUNG DULU
+            if (!isWarungBuka) {
+                document.getElementById('modal-toko-tutup').classList.remove('hidden');
+                return;
+            }
+
             const nama = document.getElementById('nama-pemesan').value;
             const btn = document.getElementById('btn-kirim');
             
@@ -568,6 +673,12 @@
         }
 
         async function kirimTopUp() {
+            // CEK STATUS WARUNG DULU
+            if (!isWarungBuka) {
+                document.getElementById('modal-toko-tutup').classList.remove('hidden');
+                return;
+            }
+
             const namaPelanggan = document.getElementById('nama_pelanggan_topup').value.trim();
             const noHp = document.getElementById('nomor_hp').value.trim();
             
@@ -585,7 +696,9 @@
 
                 if (error || !data) throw error;
 
-                tampilkanNotifikasi("Transaksi Top Up Berhasil Dikirim!");
+                // Tampilkan Modal Modern Bukannya Notifikasi Toast Biasa
+                document.getElementById('modal-success-topup').classList.remove('hidden');
+
                 let currentSavedIds = JSON.parse(localStorage.getItem('my_basecamp_topup_ids')) || [];
                 currentSavedIds.unshift(data[0].id); 
                 localStorage.setItem('my_basecamp_topup_ids', JSON.stringify(currentSavedIds));
@@ -610,7 +723,9 @@
         }
 
         // INIT LOAD
-        updateTampilanKeranjang(); ambilDataMenu();
+        updateTampilanKeranjang(); 
+        ambilDataMenu();
+        cekStatusWarungDB(); // Mengambil status buka/tutup warung saat halaman dimuat
     </script>
 </body>
 </html>
