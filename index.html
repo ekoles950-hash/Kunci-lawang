@@ -53,7 +53,7 @@
         <div class="bg-[#292524] text-amber-50 p-4 sticky top-0 z-10 shadow-md border-b-4 border-[#d97706] relative" id="header-utama">
             <h1 class="text-xl font-extrabold text-center tracking-wide text-[#f59e0b] leading-snug">☕PINGIN NGOPI KARO UDUT TAPI MAGER</h1>
             <p class="text-center text-sm text-stone-200 mt-1">warung kopi siap antar <span class="animasi-jalan-maju">🚶</span></p>
-            <button onclick="bukaModalAdmin()" class="absolute right-4 top-1/2 -translate-y-1/2 text-xl opacity-60 hover:opacity-100 transition duration-300">⚙️</button>
+            <button onclick="bukaModalPin()" class="absolute right-4 top-1/2 -translate-y-1/2 text-xl opacity-60 hover:opacity-100 transition duration-300">⚙️</button>
         </div>
 
         <div class="p-4 bg-stone-50 min-h-screen" id="halaman-beranda">
@@ -246,6 +246,18 @@
             </div>
         </div>
 
+        <div id="modal-pin" class="hidden fixed inset-0 bg-black/80 z-[100] flex justify-center items-center p-5">
+            <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl text-center animate-[slideUp_0.2s_ease-out]">
+                <h2 class="text-stone-800 font-extrabold text-xl mb-2">Akses Admin 🔒</h2>
+                <p class="text-stone-500 text-xs mb-4">Masukkan PIN untuk membuka pengaturan</p>
+                <input type="password" id="input-pin" class="w-full border-2 border-stone-300 rounded-xl p-3 text-center text-2xl tracking-[0.5em] mb-4 outline-none focus:border-[#d97706]" placeholder="••••">
+                <div class="flex gap-2">
+                    <button onclick="tutupModalPin()" class="w-1/2 bg-stone-200 hover:bg-stone-300 text-stone-800 font-bold py-3 rounded-xl transition">Batal</button>
+                    <button onclick="verifikasiPin()" class="w-1/2 bg-[#d97706] hover:bg-amber-700 text-white font-bold py-3 rounded-xl transition">Masuk</button>
+                </div>
+            </div>
+        </div>
+
         <div id="modal-admin-status" class="hidden fixed inset-0 bg-black/80 z-[100] flex justify-center items-center p-5">
             <div class="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl text-center animate-[slideUp_0.2s_ease-out]">
                 <h2 class="text-stone-800 font-extrabold text-xl mb-6">Pengaturan Warung ⚙️</h2>
@@ -264,6 +276,9 @@
     </div>
 
     <script>
+        // ================= PENGATURAN PIN ADMIN =================
+        const PIN_RAHASIA = '1234'; // <- GANTI PIN-MU DI SINI
+
         // INISIALISASI SUPABASE (Hanya perlu 1 client untuk kedua fitur)
         const SUPABASE_URL = 'https://butydxuauhtvwojvpixt.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_yO2CBmW5iJ8UKXw802hvXA_nAz3gr9X';
@@ -289,7 +304,7 @@
         // VARIABEL STATUS WARUNG (BUKA/TUTUP)
         let isWarungBuka = true;
 
-        // ================= KONTROL STATUS WARUNG =================
+        // ================= KONTROL STATUS WARUNG & PIN =================
         async function cekStatusWarungDB() {
             try {
                 // Mencoba mengambil data dari tabel 'pengaturan_warung' id 1. 
@@ -302,6 +317,36 @@
                 }
             } catch (e) { console.log("Tabel pengaturan_warung belum ada."); }
         }
+
+        // Fungsi buka PIN Modalnya
+        function bukaModalPin() { 
+            document.getElementById('modal-pin').classList.remove('hidden');
+            document.getElementById('input-pin').value = '';
+            // Auto fokus ke input setelah jeda sebentar (untuk animasi)
+            setTimeout(() => document.getElementById('input-pin').focus(), 100);
+        }
+        
+        function tutupModalPin() { 
+            document.getElementById('modal-pin').classList.add('hidden'); 
+        }
+
+        // Fungsi verifikasi PIN
+        function verifikasiPin() {
+            const input = document.getElementById('input-pin').value;
+            if (input === PIN_RAHASIA) {
+                tutupModalPin();
+                bukaModalAdmin(); // Kalau PIN benar, baru buka Pengaturan
+            } else {
+                tampilkanNotifikasi("PIN Salah! Akses ditolak.", "error");
+                document.getElementById('input-pin').value = '';
+                document.getElementById('input-pin').focus();
+            }
+        }
+
+        // Tombol enter bisa submit PIN
+        document.getElementById('input-pin').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') verifikasiPin();
+        });
 
         function bukaModalAdmin() { document.getElementById('modal-admin-status').classList.remove('hidden'); }
         function tutupModalAdmin() { document.getElementById('modal-admin-status').classList.add('hidden'); }
