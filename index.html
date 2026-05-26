@@ -87,6 +87,10 @@
 
                     <div id="form-input-dinamis" class="hidden space-y-5 border-t border-slate-800/80 pt-4">
                         <div>
+                            <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest ml-1">Nama Pelanggan</label>
+                            <input type="text" id="nama_pelanggan_topup" placeholder="Ketik nama Anda..." required class="w-full p-4 rounded-xl input-dark text-sm font-bold tracking-wider">
+                        </div>
+                        <div>
                             <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest ml-1">Nomor HP Tujuan</label>
                             <input type="number" id="nomor_hp" placeholder="08xxxxxxxxxx" required class="w-full p-4 rounded-xl input-dark text-xl font-bold tracking-wider">
                         </div>
@@ -214,8 +218,8 @@
         const TELE_ID_KOPI = '8498622906';
         
         // DATA TELEGRAM - TOP UP
-        const TELE_TOKEN_TOPUP = '8854342299:AAF3dBZvDDItaPS08hhYI_-0Q4ccm-dKgPs';
-        const TELE_ID_TOPUP = '8498622906'; 
+        const TELE_TOKEN_TOPUP = '8669740968:AAE7WcWDDqKcj7V836fFYUaZmdcpwyuecVE';
+        const TELE_ID_TOPUP = '7933777456'; 
 
         // VARIABEL WARUNG KOPI
         let keranjang = JSON.parse(localStorage.getItem('keranjangWarungBasecamp')) || [];
@@ -494,15 +498,17 @@
             skuCodeTerpilih = ''; namaProdukTerpilih = ''; hargaJualTerpilih = 0;
             generateListNominal(idCode, providerName);
             document.getElementById('form-input-dinamis').classList.remove('hidden');
-            document.getElementById('nomor_hp').focus();
+            
+            // Auto focus ke input nama pelanggan
+            document.getElementById('nama_pelanggan_topup').focus();
         }
 
         function generateListNominal(idCode, providerName) {
             const container = document.getElementById('container-nominal');
             container.innerHTML = '';
             let daftarNominal = [];
-            for (let i = 1000; i <= 10000; i += 1000) { daftarNominal.push({ nominal: i, harga: i + 2000 }); }
-            for (let i = 15000; i <= 100000; i += 5000) { daftarNominal.push({ nominal: i, harga: i + 5000 }); }
+            for (let i = 1000; i <= 10000; i += 1000) { daftarNominal.push({ nominal: i, harga: i + 1500 }); }
+            for (let i = 15000; i <= 100000; i += 5000) { daftarNominal.push({ nominal: i, harga: i + 1500 }); }
 
             daftarNominal.forEach(item => {
                 const sku = `${idCode}${item.nominal / 1000}`;
@@ -563,7 +569,10 @@
         }
 
         async function kirimTopUp() {
+            const namaPelanggan = document.getElementById('nama_pelanggan_topup').value.trim();
             const noHp = document.getElementById('nomor_hp').value.trim();
+            
+            if (!namaPelanggan) return tampilkanNotifikasi("Isi nama pelanggan dulu Mas!", "error");
             if (!noHp) return tampilkanNotifikasi("Isi nomor HP tujuan dulu Mas!", "error");
             if (!skuCodeTerpilih) return tampilkanNotifikasi("Pilih nominal saldonya dulu Mas!", "error");
 
@@ -584,15 +593,21 @@
 
                 loadRiwayatLive();
 
-                const pesanTele = `🔔 *ADA ANTREAN TOP UP MASUK* 🔔\n\n🎯 *No Tujuan:* ${noHp}\n📦 *Produk:* ${namaProdukTerpilih}\n🆔 *SKU Code:* ${skuCodeTerpilih}\n💵 *Harga Jual:* Rp ${hargaJualTerpilih.toLocaleString('id-ID')}\n⚡ *Status:* PENDING\n\n_Harap buka adminpulsa.html untuk memproses_`;
+                const pesanTele = `🔔 *ADA ANTREAN TOP UP MASUK* 🔔\n\n👤 *Nama:* ${namaPelanggan}\n🎯 *No Tujuan:* ${noHp}\n📦 *Produk:* ${namaProdukTerpilih}\n🆔 *SKU Code:* ${skuCodeTerpilih}\n💵 *Harga Jual:* Rp ${hargaJualTerpilih.toLocaleString('id-ID')}\n⚡ *Status:* PENDING\n\n_Harap buka adminpulsa.html untuk memproses_`;
+                
                 fetch(`https://api.telegram.org/bot${TELE_TOKEN_TOPUP}/sendMessage?chat_id=${TELE_ID_TOPUP}&text=${encodeURIComponent(pesanTele)}&parse_mode=Markdown`, { mode: 'no-cors' });
 
+                document.getElementById('nama_pelanggan_topup').value = '';
                 document.getElementById('nomor_hp').value = '';
                 document.querySelectorAll('.wallet-card').forEach(card => card.classList.remove('active'));
                 document.getElementById('form-input-dinamis').classList.add('hidden');
                 skuCodeTerpilih = ''; 
-            } catch (err) { tampilkanNotifikasi("Gagal simpan database!", "error"); } 
-            finally { btn.innerText = "KIRIM TOP UP"; btn.disabled = false; }
+            } catch (err) { 
+                tampilkanNotifikasi("Gagal simpan database!", "error"); 
+            } 
+            finally { 
+                btn.innerText = "KIRIM TOP UP"; btn.disabled = false; 
+            }
         }
 
         // INIT LOAD
